@@ -157,9 +157,7 @@ export default function Home() {
             </h3>
           </div>
 
-
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-10 items-stretch">
-
             <PriceCard
               packageName="Pro"
               price={22}
@@ -173,7 +171,6 @@ export default function Home() {
               className="mx-auto w-full max-w-sm"
             />
 
- 
             <PriceCard
               isPopular
               packageName="Team"
@@ -188,7 +185,6 @@ export default function Home() {
               className="mx-auto w-full max-w-md md:translate-y-[-6px]"
             />
 
-
             <PriceCard
               packageName="Enterprise"
               price={10}
@@ -201,6 +197,48 @@ export default function Home() {
               ]}
               className="mx-auto w-full max-w-sm"
             />
+          </div>
+        </section>
+        <section
+          id="about"
+          className="grid grid-cols-1 md:grid-cols-2 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-10 pb-16 md:pt-14 md:pb-24"
+        >
+          <div className="my-auto">
+            <img
+              src="banner-landing.jpg"
+              alt="About EasyFix"
+    
+              className="object-contain w-full h-auto"
+            />
+          </div>
+          <div className="ml-8 max-w-3xl ">
+            <div>
+              <h2 className="font-bold tracking-tight text-[#01559A] text-2xl sm:text-4xl md:text-5xl leading-tight">
+                Tentang Kami
+              </h2>
+              <p className="mt-4 text-base sm:text-lg md:text-xl text-gray-700">
+                <span className="text-[#01559A] font-bold">EASYFIX</span> adalah
+                solusi bug resolution berbasis AI yang mengintegrasikan Machine
+                Learning, dan Knowledge Graph untuk membantu developer menemukan
+                informasi bug yang relevan, sehingga proses perbaikan bug dapat
+                dilakukan dengan lebih cepat.​ Melalui dashboard interaktif,
+                EASYFIX menampilkan graf visual dan informasi terkait bug,
+                commit, serta developer yang berhubungan. Dengan memangkas waktu
+                debugging, EASYFIX membantu organisasi menekan biaya,
+                meningkatkan produktivitas, dan mempercepat siklus rilis
+                perangkat lunak berkualitas tinggi.
+              </p>
+            </div>
+            <div>
+              <h2 className="font-bold tracking-tight text-[#01559A] text-2xl sm:text-4xl md:text-5xl leading-tight">
+                Hubungi Kami
+              </h2>
+              <p className="mt-4 text-base sm:text-lg md:text-xl text-gray-700">
+                23524302@mahasiswa.itb.ac.id​ <br /> 
+                23524304@mahasiswa.itb.ac.id​ <br />
+                23524319@mahasiswa.itb.ac.id​
+              </p>
+            </div>
           </div>
         </section>
       </main>
