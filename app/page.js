@@ -2,6 +2,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import PriceCard from "@/components/PriceCard";
 
 export default function Home() {
   const [open, setOpen] = useState(false);
@@ -23,9 +24,11 @@ export default function Home() {
             </Link>
           </div>
 
-
           <div className="hidden md:flex items-center gap-6">
-            <Link href="#pricing" className="text-sm font-medium text-[#01559A] hover:opacity-80">
+            <Link
+              href="#pricing"
+              className="text-sm font-medium text-[#01559A] hover:opacity-80"
+            >
               Pricing
             </Link>
             <Link
@@ -37,7 +40,10 @@ export default function Home() {
           </div>
 
           <div className="hidden md:flex items-center gap-3">
-            <Link href="#login" className="text-sm font-semibold text-[#01559A] hover:opacity-80">
+            <Link
+              href="#login"
+              className="text-sm font-semibold text-[#01559A] hover:opacity-80"
+            >
               Login
             </Link>
             <Link
@@ -76,11 +82,13 @@ export default function Home() {
           </button>
         </nav>
 
-
         {open && (
           <div className="md:hidden border-t border-gray-100">
             <div className="px-4 sm:px-6 py-3 flex flex-col gap-3">
-              <Link href="#pricing" className="text-sm font-medium text-[#01559A]">
+              <Link
+                href="#pricing"
+                className="text-sm font-medium text-[#01559A]"
+              >
                 Pricing
               </Link>
               <Link
@@ -90,7 +98,10 @@ export default function Home() {
                 About Us
               </Link>
               <div className="h-px bg-gray-100 my-1" />
-              <Link href="#login" className="text-sm font-semibold text-[#01559A]">
+              <Link
+                href="#login"
+                className="text-sm font-semibold text-[#01559A]"
+              >
                 Login
               </Link>
               <Link
@@ -104,17 +115,23 @@ export default function Home() {
         )}
       </header>
 
-
       <main className="flex-1">
         <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-10 pb-16 md:pt-14 md:pb-24 grid gap-10 items-center">
           <div className="text-center ">
             <h1 className="font-extrabold tracking-tight text-[#01559A] text-3xl sm:text-4xl md:text-5xl leading-tight">
               Percepat debugging dengan bug
               <br className="hidden md:block" />
-              <span className="md:whitespace-nowrap"> resolution berbasis AI</span>
+              <span className="md:whitespace-nowrap">
+                {" "}
+                resolution berbasis AI
+              </span>
             </h1>
             <p className="mt-4 text-base sm:text-lg md:text-xl text-gray-700">
-              Belajar mengetik dua kali lebih cepat hanya akan mempercepat waktu pengembangan keseluruhan beberapa persen saja. Jadi, jika ingin mempercepat proses pengembangan perangkat lunak hingga selesai, fokuslah pada upaya mengurangi waktu yang dihabiskan untuk debugging.
+              Belajar mengetik dua kali lebih cepat hanya akan mempercepat waktu
+              pengembangan keseluruhan beberapa persen saja. Jadi, jika ingin
+              mempercepat proses pengembangan perangkat lunak hingga selesai,
+              fokuslah pada upaya mengurangi waktu yang dihabiskan untuk
+              debugging.
             </p>
             <div className="mt-6 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
               <Link
@@ -123,22 +140,84 @@ export default function Home() {
               >
                 Get Started
               </Link>
-             
             </div>
           </div>
+        </section>
+        <section
+          id="pricing"
+          className="bg-[#01559A] px-4 sm:px-6 lg:px-8 pt-8 pb-16 md:pt-10 md:pb-24"
+        >
+          {/* Headline row */}
+          <div className="grid grid-cols-1 md:grid-cols-2 items-center mb-8 md:mb-12">
+            <h2 className="text-3xl md:text-4xl font-extrabold text-white">
+              Pricing
+            </h2>
+            <h3 className="text-lg md:text-xl font-normal text-white/95 md:text-right mt-2 md:mt-0">
+              Simple, Transparent, Flexible
+            </h3>
+          </div>
 
-        
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-10 items-stretch">
+
+            <PriceCard
+              packageName="Pro"
+              price={22}
+              billingCycle="User"
+              subtitle="for small dev"
+              features={[
+                "1-50 Users",
+                "no limit transactions",
+                "unlimited query search",
+              ]}
+              className="mx-auto w-full max-w-sm"
+            />
+
+ 
+            <PriceCard
+              isPopular
+              packageName="Team"
+              price={12}
+              billingCycle="User"
+              subtitle="For medium team"
+              features={[
+                "50-150 Users",
+                "no limit transactions",
+                "unlimited query search",
+              ]}
+              className="mx-auto w-full max-w-md md:translate-y-[-6px]"
+            />
+
+
+            <PriceCard
+              packageName="Enterprise"
+              price={10}
+              billingCycle="User"
+              subtitle="For Large Team"
+              features={[
+                "> 150 Users",
+                "no limit transactions",
+                "unlimited query search",
+              ]}
+              className="mx-auto w-full max-w-sm"
+            />
+          </div>
         </section>
       </main>
 
-     
       <footer className="mt-auto border-t border-gray-100">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-gray-500">
           <p>© {new Date().getFullYear()} EasyFix. All rights reserved.</p>
           <div className="flex items-center gap-4">
-            <Link href="#privacy" className="hover:text-gray-700">Privacy</Link>
-            <Link href="#terms" className="hover:text-gray-700">Terms</Link>
-            <Link href="#contact" className="hover:text-gray-700">Contact</Link>
+            <Link href="#privacy" className="hover:text-gray-700">
+              Privacy
+            </Link>
+            <Link href="#terms" className="hover:text-gray-700">
+              Terms
+            </Link>
+            <Link href="#contact" className="hover:text-gray-700">
+              Contact
+            </Link>
           </div>
         </div>
       </footer>
