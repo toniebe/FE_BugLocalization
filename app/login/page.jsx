@@ -3,22 +3,27 @@ import Image from "next/image";
 import Link from "next/link";
 import React, { useState } from "react";
 import { login } from "../_lib/auth-client";
+import { useRouter } from "next/router";
 
 function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [msg, setMsg] = useState("");
+  const router = useRouter();
+  const sp = useSearchParams();
+  const next = sp.get("next") || "/dashboard";
 
   async function onSubmit(e) {
     e.preventDefault();
     setMsg("");
     try {
       await login(email, password);
-      setMsg("Login sukses!");
+      router.replace(next);
     } catch (e) {
       setMsg(e.message || "Login gagal");
     }
   }
+
   return (
     <main className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
