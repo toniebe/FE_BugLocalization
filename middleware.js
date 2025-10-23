@@ -7,7 +7,7 @@ export function middleware(req) {
   const isAuthPage = pathname === "/login" || pathname === "/register";
 
 
-  if (!token && pathname.startsWith("/dashboard")) {
+  if (!token && pathname.startsWith("/home")) {
     const url = req.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("next", pathname + (searchParams.toString() ? `?${searchParams}` : ""));
@@ -16,7 +16,7 @@ export function middleware(req) {
 
   if (token && isAuthPage) {
     const url = req.nextUrl.clone();
-    url.pathname = "/dashboard";
+    url.pathname = "/home";
     return NextResponse.redirect(url);
   }
 
@@ -25,5 +25,5 @@ export function middleware(req) {
 
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/login", "/register"],
+  matcher: ["/home/:path*", "/login", "/register"],
 };

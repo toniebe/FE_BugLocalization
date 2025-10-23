@@ -1,3 +1,4 @@
+// app/api/auth/login/route.js
 import { NextResponse } from "next/server";
 import { apiFetch } from "@/app/_lib/fetcher";
 
@@ -5,20 +6,30 @@ export async function POST(req) {
   const body = await req.json();
   const data = await apiFetch("/auth/login", {
     method: "POST",
-    body: JSON.stringify(body), // { email, password }
+    body: JSON.stringify(body),
   });
 
   const res = NextResponse.json({ ok: true, uid: data.uid, email: data.email });
+
   const maxAge = data.expiresIn ? parseInt(data.expiresIn, 10) : 3600;
+  const isProd = process.env.NODE_ENV === "production";
 
-  res.cookies.set("id_token", data.idToken, {
-    httpOnly: true, sameSite: "lax", secure: true, path: "/", maxAge,
-  });
 
+  const cookieOpts = {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: isProd,
+    path: "/",
+    maxAge,
+  };
+
+  res.cookies.set("id_token", data.idToken, cookieOpts);
   if (data.refreshToken) {
     res.cookies.set("refresh_token", data.refreshToken, {
-      httpOnly: true, sameSite: "lax", secure: true, path: "/", maxAge: 60*60*24*30,
+      ...cookieOpts,
+      maxAge: 60 * 60 * 24 * 30,
     });
   }
+
   return res;
 }

@@ -1,5 +1,6 @@
 import EasyfixBugGraph from "@/components/EasyFixBugGraph";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import React from "react";
 
 const sample = {
@@ -139,19 +140,17 @@ const sample = {
 };
 
 export default async function Page() {
-  const cookieStore = await cookies();
-  const r = await fetch(
-    `${process.env.NEXT_PUBLIC_SITE_URL || ""}/api/auth/me`,
-    {
-      headers: { cookie: cookieStore.toString() },
-      cache: "no-store",
-    }
-  );
-  if (r.status === 401) {
-    // backup guard (harusnya tertahan middleware)
-    return <meta httpEquiv="refresh" content="0; url=/login" />;
-  }
-  const me = await r.json();
+  const idToken = cookies().get("id_token")?.value;
+  if (!idToken) redirect("/login?next=/dashboard");
+
+  const r = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/me`, {
+    headers: { Authorization: `Bearer ${idToken}` },
+    cache: "no-store",
+  });
+
+  if (r.status === 401) redirect("/login?next=/dashboard");
+
+  
   return (
     <main className="w-full h-screen bg-gray-100">
       {/* Header */}

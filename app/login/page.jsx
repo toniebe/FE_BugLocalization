@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import React, { useState } from "react";
 import { login } from "../_lib/auth-client";
-import { useRouter } from "next/router";
+import { useRouter, useSearchParams } from "next/navigation";
 
 function LoginPage() {
   const [email, setEmail] = useState("");
@@ -11,7 +11,7 @@ function LoginPage() {
   const [msg, setMsg] = useState("");
   const router = useRouter();
   const sp = useSearchParams();
-  const next = sp.get("next") || "/dashboard";
+  const next = sp.get("next") || "/home";
 
   async function onSubmit(e) {
     e.preventDefault();

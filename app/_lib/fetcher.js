@@ -7,17 +7,22 @@ export async function apiFetch(path, init = {}) {
     ...(rest.headers || {}),
   };
 
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...rest,
-    headers,
-    cache: "no-store",
-  });
+  const res = await fetch(`${API_BASE}${path}`, { ...rest, headers, cache: "no-store" });
 
   let data = null;
-  try { data = await res.json(); } catch (_) {}
+  let text = null;
+  try {
+    data = await res.clone().json();
+  } catch {
+    try { text = await res.text(); } catch {}
+  }
 
   if (!res.ok) {
-    throw new Error((data && data.detail) || `API ${res.status}`);
+    const detail = data?.detail || data?.error || text || `API ${res.status}`;
+    const err = new Error(detail);
+    err.status = res.status;
+    err.upstream = { data, text };
+    throw err;
   }
-  return data;
+  return data ?? (text ? { text } : null);
 }
