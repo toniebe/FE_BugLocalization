@@ -1,8 +1,24 @@
+"use client";
 import Image from "next/image";
 import Link from "next/link";
-import React from "react";
+import React, { useState } from "react";
+import { login } from "../_lib/auth-client";
 
-function login() {
+function LoginPage() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [msg, setMsg] = useState("");
+
+  async function onSubmit(e) {
+    e.preventDefault();
+    setMsg("");
+    try {
+      await login(email, password);
+      setMsg("Login sukses!");
+    } catch (e) {
+      setMsg(e.message || "Login gagal");
+    }
+  }
   return (
     <main className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
@@ -13,17 +29,22 @@ function login() {
           height={150}
           className="mx-auto mb-6"
         />
-        <h1 className="text-2xl font-bold mb-2 text-center text-[#01559A]">Welcome Back</h1>
+        <h1 className="text-2xl font-bold mb-2 text-center text-[#01559A]">
+          Welcome Back
+        </h1>
         <p className="mb-4 text-center text-[#44444E]">
-          Glad to see you again 👋 <br/>Login to your account below
+          Glad to see you again 👋 <br />
+          Login to your account below
         </p>
-        <form className="space-y-4">
+        <form className="space-y-4" onSubmit={onSubmit}>
           <div>
             <label className="block text-gray-700">Email</label>
             <input
               type="email"
               className="w-full mt-1 p-2 border rounded border-[#44444E]"
-              placeholder=""
+              placeholder="youre@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
             />
           </div>
@@ -34,6 +55,8 @@ function login() {
               className="w-full mt-1 p-2 border rounded border-[#44444E]"
               placeholder=""
               required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
             />
           </div>
           <button
@@ -42,6 +65,7 @@ function login() {
           >
             Login
           </button>
+          {msg && <p className="text-red-500 text-center mt-2">{msg}</p>}
         </form>
         <div>
           <p className="mt-4 text-center text-gray-600">
@@ -56,4 +80,4 @@ function login() {
   );
 }
 
-export default login;
+export default LoginPage;
