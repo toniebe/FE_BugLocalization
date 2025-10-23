@@ -1,9 +1,18 @@
+import Image from "next/image";
+import Link from "next/link";
 import React from "react";
 
 function login() {
   return (
     <main className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
+        <Image
+          src="/easyfix-logo.png"
+          alt="EasyFix Logo"
+          width={150}
+          height={150}
+          className="mx-auto mb-6"
+        />
         <h1 className="text-2xl font-bold mb-2 text-center text-[#01559A]">Welcome Back</h1>
         <p className="mb-4 text-center text-[#44444E]">
           Glad to see you again 👋 <br/>Login to your account below
@@ -37,9 +46,9 @@ function login() {
         <div>
           <p className="mt-4 text-center text-gray-600">
             Don't have an account?{" "}
-            <a href="#" className="text-[#01559A] font-semibold">
+            <Link href="/register" className="text-[#01559A] font-semibold">
               Sign Up
-            </a>
+            </Link>
           </p>
         </div>
       </div>
