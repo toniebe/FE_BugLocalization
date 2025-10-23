@@ -41,7 +41,7 @@ export default function Home() {
 
           <div className="hidden md:flex items-center gap-3">
             <Link
-              href="#login"
+              href="/login"
               className="text-sm font-semibold text-[#01559A] hover:opacity-80"
             >
               Login
@@ -99,7 +99,7 @@ export default function Home() {
               </Link>
               <div className="h-px bg-gray-100 my-1" />
               <Link
-                href="#login"
+                href="/login"
                 className="text-sm font-semibold text-[#01559A]"
               >
                 Login
@@ -135,7 +135,7 @@ export default function Home() {
             </p>
             <div className="mt-6 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
               <Link
-                href="#get-started"
+                href="/login"
                 className="inline-flex items-center justify-center rounded-lg px-6 py-3 text-base sm:text-lg font-medium text-white bg-[#01559A] hover:opacity-90 transition"
               >
                 Get Started
