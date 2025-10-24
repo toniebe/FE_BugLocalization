@@ -56,12 +56,12 @@ function buildElements(data) {
 
   for (const d of data.developers || []) {
     const email = norm(d.developer);
-    if (!connectedDevEmails.has(email)) continue; // hide dev tanpa hubungan
+    if (!connectedDevEmails.has(email)) continue;
     els.push({
       data: {
         id: `dev:${email}`,
         type: "dev",
-        email,                      // <-- untuk label dev di atas
+        email,                     
         freq: d.freq,
         score: d.score,
       },
@@ -126,7 +126,6 @@ export default function EasyfixBugGraph({ data }) {
   const elements = useMemo(() => buildElements(data), [data]);
   const cyRef = useRef(null);
 
-  // Layout melingkar berlapis (query pusat, bug ring tengah, dev ring luar)
   const layout = {
     name: "concentric",
     fit: false,
@@ -143,7 +142,7 @@ export default function EasyfixBugGraph({ data }) {
   };
 
   const stylesheet = [
-    // Node bulat - base
+ 
     {
       selector: "node",
       style: {
@@ -153,7 +152,7 @@ export default function EasyfixBugGraph({ data }) {
         "background-color": "#1f2937",
         "border-width": 3,
         "border-color": "#e5e7eb",
-        label: "",                  // default kosong
+        label: "",                 
         "font-size": 10,
         color: "#111827",
         "text-background-color": "#ffffff",
@@ -217,13 +216,13 @@ export default function EasyfixBugGraph({ data }) {
       <CytoscapeComponent
         cy={(cy) => {
           cyRef.current = cy;
-          // 1) Jalankan layout global
+         
           cy.layout(layout).run();
 
-          // 2) Tempatkan dev tepat di atas bug yang terkait
+       
           placeDevelopersAboveBugs(cy);
 
-          // 3) Zoom awal 100% & center
+      
           cy.zoom(1);
           cy.center();
 

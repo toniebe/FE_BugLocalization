@@ -47,7 +47,7 @@ export default function Home() {
               Login
             </Link>
             <Link
-              href="#signup"
+              href="/register"
               className="bg-[#01559A] px-4 py-2 text-sm font-medium text-white rounded-lg hover:opacity-90 transition"
             >
               Sign Up
@@ -105,7 +105,7 @@ export default function Home() {
                 Login
               </Link>
               <Link
-                href="#signup"
+                href="/register"
                 className="bg-[#01559A] px-4 py-2 text-sm font-medium text-white rounded-lg w-full text-center"
               >
                 Sign Up
