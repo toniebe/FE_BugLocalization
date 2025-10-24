@@ -9,21 +9,51 @@ export async function GET(req) {
   const dev_limit = searchParams.get("dev_limit") || "10";
 
   if (q.length < 2) {
-    return NextResponse.json({ error: "Query `q` minimal 2 karakter" }, { status: 400 });
+    return NextResponse.json({ error: "BAD_REQUEST", detail: "Query `q` minimal 2 karakter" }, { status: 400 });
   }
 
-  const upstream = `${API_BASE}/search?` + new URLSearchParams({ q, limit, dev_limit }).toString();
-  const r = await fetch(upstream, { cache: "no-store" });
+  const upstreamUrl = `${API_BASE.replace(/\/+$/,"")}/search?` +
+    new URLSearchParams({ q, limit, dev_limit }).toString();
 
-  let data = null;
-  try { data = await r.json(); } catch {}
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), 15000);
 
-  if (!r.ok) {
+  try {
+    const r = await fetch(upstreamUrl, {
+      cache: "no-store",
+      headers: { accept: "application/json" },
+      signal: ctrl.signal,
+    });
+    clearTimeout(t);
+
+    // coba json, fallback ke text
+    let body = null, text = null;
+    try { body = await r.clone().json(); } catch {}
+    if (!body) { try { text = await r.text(); } catch {} }
+
+    if (!r.ok) {
+      return NextResponse.json(
+        {
+          error: "UPSTREAM_ERROR",
+          status: r.status,
+          detail: body?.detail || body?.error || text || r.statusText,
+          upstreamUrl,
+        },
+        { status: r.status }
+      );
+    }
+
+    return NextResponse.json(body ?? { text });
+  } catch (e) {
+    clearTimeout(t);
+    const isTimeout = e?.name === "AbortError";
     return NextResponse.json(
-      { error: "UPSTREAM_ERROR", detail: data?.detail || data || r.statusText },
-      { status: r.status }
+      {
+        error: isTimeout ? "UPSTREAM_TIMEOUT" : "UPSTREAM_FETCH_FAILED",
+        detail: isTimeout ? "Upstream timeout (15s)" : (e?.message || String(e)),
+        upstreamUrl,
+      },
+      { status: 504 }
     );
   }
-
-  return NextResponse.json(data);
 }

@@ -213,7 +213,7 @@ export default function EasyfixBugGraph({ data }) {
   ];
 
   return (
-    <div className="w-full h-[72vh] rounded-lg" style={{ background: "#d1d5db" }}>
+    <div className="w-full" style={{ background: "#d1d5db" }}>
       <CytoscapeComponent
         cy={(cy) => {
           cyRef.current = cy;
