@@ -3,7 +3,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import EasyfixBugGraph from "@/components/EasyFixBugGraph";
 
-
 async function searchBugs({ q, limit = 25, dev_limit = 10, signal } = {}) {
   const qs = new URLSearchParams({
     q,
@@ -176,7 +175,6 @@ const SAMPLE = {
   ],
 };
 
-
 function useDebounce(value, delay = 500) {
   const [v, setV] = useState(value);
   useEffect(() => {
@@ -186,12 +184,11 @@ function useDebounce(value, delay = 500) {
   return v;
 }
 
-
 export default function SearchClient() {
-  const [q, setQ] = useState(SAMPLE.query);
+  const [q, setQ] = useState("");
   const [limit, setLimit] = useState(25);
   const [devLimit, setDevLimit] = useState(10);
-  const [mode, setMode] = useState("graph"); 
+  const [mode, setMode] = useState("graph");
   const [data, setData] = useState(SAMPLE);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
@@ -201,7 +198,6 @@ export default function SearchClient() {
 
   useEffect(() => {
     if (!debouncedQ || debouncedQ.length < 2) return;
-
 
     if (abortRef.current) abortRef.current.abort();
     const ctrl = new AbortController();
@@ -260,14 +256,12 @@ export default function SearchClient() {
     }
   }
 
-
   function onKeyDown(e) {
     if (e.key === "Enter") {
       e.preventDefault();
       if (!loading) doSearch();
     }
   }
-
 
   const BugsList = useMemo(() => {
     return (
@@ -303,10 +297,9 @@ export default function SearchClient() {
   }, [data]);
 
   const GraphPane = useMemo(() => {
-
     return (
       <div
-        className="relative bg-white border border-[#e4e4e4] rounded-lg overflow-hidden"
+        className="relative bg-white border border-[#e4e4e4] rounded-lg"
         style={{ height: "calc(100vh - 7rem)", minHeight: 420 }}
       >
         {loading && (
@@ -315,14 +308,11 @@ export default function SearchClient() {
           </div>
         )}
 
-        <div className="w-full h-full">
-          <EasyfixBugGraph
-    
-            data={data}
-
-          />
+        <div className="w-full h-full ">
+          <EasyfixBugGraph data={data} />
         </div>
       </div>
+
     );
   }, [data, loading, mode]);
 
@@ -462,7 +452,6 @@ export default function SearchClient() {
           </div>
         </aside>
 
-
         <section className="col-span-12 md:col-span-9">
           <div className="w-full bg-white py-3 px-4 text-sm border border-[#e4e4e4] rounded-lg mb-3">
             <span className="font-medium text-[#0D5DB8]">View:</span>
@@ -500,7 +489,7 @@ export default function SearchClient() {
             )}
           </div>
 
-          {mode === "graph" ?  GraphPane : BugsList}
+          {mode === "graph" ? GraphPane : BugsList}
         </section>
       </div>
     </main>

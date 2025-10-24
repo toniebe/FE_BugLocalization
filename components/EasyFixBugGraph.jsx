@@ -212,7 +212,7 @@ export default function EasyfixBugGraph({ data }) {
   ];
 
   return (
-    <div className="w-full" style={{ background: "#d1d5db" }}>
+    <div className="w-full h-full" >
       <CytoscapeComponent
         cy={(cy) => {
           cyRef.current = cy;
@@ -238,7 +238,7 @@ export default function EasyfixBugGraph({ data }) {
         elements={elements}
         layout={layout}
         stylesheet={stylesheet}
-        style={{ width: "100%", height: "100%", display: "block" }}
+        style={{ width: "100%", height: "100%"}}
         wheelSensitivity={0.3}
         minZoom={0.3}
         maxZoom={3}
