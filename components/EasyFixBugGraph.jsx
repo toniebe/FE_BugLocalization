@@ -15,7 +15,7 @@ function buildElements(data) {
   const els = [];
   const norm = (s) => (s || "").trim().toLowerCase();
 
-  // 1) Node pusat (QUERY)
+  // 1) Node QUERY
   els.push({ data: { id: "query", type: "query", title: data.query } });
 
   // 2) BUG nodes + edges query->bug
@@ -46,29 +46,41 @@ function buildElements(data) {
     });
   }
 
-  // 3) DEV nodes (only yang connected ke bug)
-  const allDevEmails = new Set((data.developers || []).map((d) => norm(d.developer)));
+  // 3) Hanya dev yang benar-benar “connected”
+  const allDevEmails = new Set(
+    (data.developers || []).map((d) => norm(d.developer))
+  );
   const connectedDevEmails = new Set();
   for (const b of data.bugs || []) {
     const assignee = norm(b.assigned_to);
-    if (assignee && allDevEmails.has(assignee)) connectedDevEmails.add(assignee);
+    if (assignee && allDevEmails.has(assignee))
+      connectedDevEmails.add(assignee);
   }
 
+  // 4) Dev nodes
   for (const d of data.developers || []) {
     const email = norm(d.developer);
     if (!connectedDevEmails.has(email)) continue;
+
+    const devId = `dev:${email}`;
+    els.push({
+      data: { id: devId, type: "dev", email, freq: d.freq, score: d.score },
+    });
+
+    // Tambahan: edge langsung dari QUERY ke DEV (berat berdasarkan score)
+    const devWeight = Math.max(1, Math.round((d.score ?? 0) / 1000));
     els.push({
       data: {
-        id: `dev:${email}`,
-        type: "dev",
-        email,
-        freq: d.freq,
-        score: d.score,
+        id: `query->${devId}`,
+        source: "query",
+        target: devId,
+        rel: "q_dev",
+        weight: devWeight,
       },
     });
   }
 
-  // 4) Edge dev->bug (assigned_to)
+  // 5) Edge dev->bug (tetap dipertahankan)
   for (const b of data.bugs || []) {
     const assignee = norm(b.assigned_to);
     if (!assignee || !connectedDevEmails.has(assignee)) continue;
@@ -85,7 +97,6 @@ function buildElements(data) {
   return els;
 }
 
-
 function placeDevelopersAroundBugs(cy) {
   //mapping bug -> dev nodes
   const bugToDevs = new Map();
@@ -98,7 +109,6 @@ function placeDevelopersAroundBugs(cy) {
     bugToDevs.get(key).push(dev);
   });
 
-
   const willCollide = (x, y, selfId, padding = 6) => {
     let collide = false;
     cy.nodes().forEach((n) => {
@@ -106,9 +116,7 @@ function placeDevelopersAroundBugs(cy) {
       const p = n.position();
       const rSelf = 28; // ~ radius dev
       const rOther =
-        n.data("type") === "bug" ? 30
-        : n.data("type") === "query" ? 30
-        : 28;
+        n.data("type") === "bug" ? 30 : n.data("type") === "query" ? 30 : 28;
       const minDist = rSelf + rOther + padding;
       const dx = x - p.x;
       const dy = y - p.y;
@@ -118,23 +126,20 @@ function placeDevelopersAroundBugs(cy) {
     return collide;
   };
 
-
   cy.batch(() => {
     let bugIndex = 0;
     bugToDevs.forEach((devNodes, bugId) => {
       const bug = cy.getElementById(bugId);
       const bp = bug.position();
 
-
       const baseRadius = 110;
       let radius = baseRadius;
-
 
       let startAngle = (bugIndex % 8) * (Math.PI / 4); // 0,45°,90°,... (rad)
       bugIndex++;
 
       const n = devNodes.length;
-      const angleStep = (Math.PI * 2) / Math.max(6, n); 
+      const angleStep = (Math.PI * 2) / Math.max(6, n);
 
       // cari posisi aman untuk tiap dev
       devNodes.forEach((d, i) => {
@@ -157,7 +162,6 @@ function placeDevelopersAroundBugs(cy) {
           }
         }
 
-
         if (!placed) {
           d.position({ x: bp.x + (radius + 20), y: bp.y });
           d.lock();
@@ -167,14 +171,14 @@ function placeDevelopersAroundBugs(cy) {
   });
 }
 
-
 function resolveDevCollisions(cy) {
-  const DEV_RADIUS = 28; 
+  const DEV_RADIUS = 28;
   const BUG_RADIUS = 28;
 
   const devs = cy.nodes('node[type = "dev"]');
-  const others = cy.nodes('node[type = "bug"], node[type = "dev"], node[type = "query"]');
-
+  const others = cy.nodes(
+    'node[type = "bug"], node[type = "dev"], node[type = "query"]'
+  );
 
   for (let iter = 0; iter < 8; iter++) {
     let moved = false;
@@ -217,7 +221,6 @@ export default function EasyfixBugGraph({ data }) {
   const elements = useMemo(() => buildElements(data), [data]);
   const cyRef = useRef(null);
 
-
   const layout = {
     name: "concentric",
     fit: false,
@@ -228,7 +231,7 @@ export default function EasyfixBugGraph({ data }) {
       const t = node.data("type");
       if (t === "query") return 3;
       if (t === "bug") return 2;
-      return 1; 
+      return 1;
     },
     levelWidth: () => 1,
   };
@@ -252,14 +255,18 @@ export default function EasyfixBugGraph({ data }) {
         "text-background-padding": 2,
         "text-halign": "center",
         "text-wrap": "none",
-        "overlay-opacity": 0, 
+        "overlay-opacity": 0,
         "z-index-compare": "auto",
       },
     },
     // Query (tanpa label)
     {
       selector: 'node[type = "query"]',
-      style: { "background-color": "#C58B22", "border-color": "#E8BE72", label: "" },
+      style: {
+        "background-color": "#C58B22",
+        "border-color": "#E8BE72",
+        label: "",
+      },
     },
     // Bug: label = ID
     {
@@ -315,6 +322,45 @@ export default function EasyfixBugGraph({ data }) {
         "line-opacity": 0.9,
       },
     },
+    {
+      selector: "edge",
+      style: {
+        "curve-style": "unbundled-bezier",
+        "control-point-step-size": 30,
+        "line-color": "#64748b",
+        "line-opacity": 0.95,
+        "target-arrow-shape": "none",
+        "source-arrow-shape": "none",
+        width: 2.5,
+      },
+    },
+    // query -> bug
+    {
+      selector: 'edge[rel = "matches"]',
+      style: {
+        width: "mapData(weight, 1, 5, 3, 7.5)",
+        "line-color": "#334155",
+      },
+    },
+    // dev -> bug
+    {
+      selector: 'edge[rel = "assigned_to"]',
+      style: {
+        "line-color": "#9333ea",
+        width: 3,
+        "line-opacity": 0.9,
+      },
+    },
+    // query -> dev
+    {
+      selector: 'edge[rel = "q_dev"]',
+      style: {
+        "line-color": "#0ea5e9", // biru-cyan
+        "line-style": "dashed",
+        width: "mapData(weight, 1, 10, 2, 5)", // opsional: tebal berdasar score/freq
+        "line-opacity": 0.9,
+      },
+    },
   ];
 
   return (
@@ -323,10 +369,8 @@ export default function EasyfixBugGraph({ data }) {
         cy={(cy) => {
           cyRef.current = cy;
 
-    
-          cy.nodes('node[type = "dev"]').lock(); 
+          cy.nodes('node[type = "dev"]').lock();
           cy.layout(layout).run();
-
 
           placeDevelopersAroundBugs(cy);
           resolveDevCollisions(cy);
@@ -340,7 +384,10 @@ export default function EasyfixBugGraph({ data }) {
             const id = evt.target.id();
             if (id.startsWith("bug:")) {
               const bugNum = id.split(":")[1];
-              window.open(`https://bugzilla.mozilla.org/show_bug.cgi?id=${bugNum}`, "_blank");
+              window.open(
+                `https://bugzilla.mozilla.org/show_bug.cgi?id=${bugNum}`,
+                "_blank"
+              );
             }
           });
         }}
