@@ -376,7 +376,7 @@ export default function SearchClient() {
 
           <div className="flex items-center gap-2 mt-3">
             <button
-              className="text-sm text-gray-500 hover:underline"
+              className="text-sm text-[#0D5DB8] font-semibold hover:underline"
               onClick={() => {
                 setQ("");
                 setErr("");
@@ -387,7 +387,7 @@ export default function SearchClient() {
               Clear
             </button>
             <button
-              className="ml-auto bg-[#0D5DB8] text-white text-sm px-4 py-2 rounded disabled:opacity-60"
+              className="ml-auto w-1/2 bg-[#0D5DB8] text-white text-sm px-4 py-2 rounded disabled:opacity-60"
               onClick={doSearch}
               disabled={loading || !q || q.length < 2}
               type="button"
@@ -404,28 +404,6 @@ export default function SearchClient() {
           )}
 
           <div className="mt-6 text-sm flex items-center gap-3">
-            <button
-              onClick={() => setMode("graph")}
-              className={`px-3 py-1 rounded border ${
-                mode === "graph"
-                  ? "bg-[#0D5DB8] text-white border-[#0D5DB8]"
-                  : "bg-white text-gray-700 border-[#e4e4e4]"
-              }`}
-              type="button"
-            >
-              Graph
-            </button>
-            <button
-              onClick={() => setMode("list")}
-              className={`px-3 py-1 rounded border ${
-                mode === "list"
-                  ? "bg-[#0D5DB8] text-white border-[#0D5DB8]"
-                  : "bg-white text-gray-700 border-[#e4e4e4]"
-              }`}
-              type="button"
-            >
-              List
-            </button>
 
             <button
               onClick={() => {
@@ -454,8 +432,8 @@ export default function SearchClient() {
 
         <section className="col-span-12 md:col-span-9">
           <div className="w-full bg-white py-3 px-4 text-sm border border-[#e4e4e4] rounded-lg mb-3">
-            <span className="font-medium text-[#0D5DB8]">View:</span>
-            <span className="mx-2">
+            {/* <span className="font-medium text-[#0D5DB8]">View:</span> */}
+            {/* <span className="mx-2">
               <button
                 onClick={() => setMode("graph")}
                 className={`underline-offset-4 ${
@@ -481,7 +459,30 @@ export default function SearchClient() {
               >
                 List
               </button>
-            </span>
+            </span> */}
+
+            <button
+              onClick={() => setMode("graph")}
+              className={`px-3 py-1 rounded border ${
+                mode === "graph"
+                  ? "bg-[#0D5DB8] text-white border-[#0D5DB8]"
+                  : "bg-white text-gray-700 border-[#e4e4e4]"
+              }`}
+              type="button"
+            >
+              Graph
+            </button>
+            <button
+              onClick={() => setMode("list")}
+              className={`px-3 py-1 rounded border ${
+                mode === "list"
+                  ? "bg-[#0D5DB8] text-white border-[#0D5DB8]"
+                  : "bg-white text-gray-700 border-[#e4e4e4]"
+              }`}
+              type="button"
+            >
+              List
+            </button>
 
             {loading && <span className="ml-3 text-gray-500">Loading…</span>}
             {!loading && data?.bugs?.length === 0 && (
