@@ -9,6 +9,7 @@ export default function Register({ nextPath = "/home" }) {
   const [pwd, setPwd] = useState("");
   const [pwd2, setPwd2] = useState("");
   const [msg, setMsg] = useState("");
+  const [disabled, setDisabled] = useState(false);
 
   async function onSubmit(e) {
     e.preventDefault();
@@ -18,9 +19,11 @@ export default function Register({ nextPath = "/home" }) {
       return;
     }
     try {
+      setDisabled(true);
       await signup(email, pwd);
       // redirect manual jika perlu:
       window.location.replace(nextPath);
+      setDisabled(false);
     } catch (err) {
       setMsg(err?.message || "Gagal daftar");
     }
@@ -50,7 +53,9 @@ export default function Register({ nextPath = "/home" }) {
                    value={pwd2} onChange={(e)=>setPwd2(e.target.value)} required />
           </div>
 
-          <button type="submit" className="w-full bg-[#01559A] text-white p-2 rounded hover:bg-blue-600 transition">
+          <button disabled={disabled} type="submit" 
+          className={`w-full ${disabled ? "bg-gray-400": "bg-[#01559A] hover:bg-[#0468ba] transition"}  text-white p-2 rounded `}
+          >
             Register
           </button>
 

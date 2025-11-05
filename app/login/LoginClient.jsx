@@ -11,14 +11,18 @@ export default function LoginClient({ nextUrl = "/home" }) {
   const [password, setPassword] = useState("");
   const [msg, setMsg] = useState("");
   const router = useRouter();
+  const [disabled, setDisabled] = useState(false);
 
   async function onSubmit(e) {
     e.preventDefault();
     setMsg("");
     try {
-      await login(email, password);     
+      setDisabled(true);
+      await login(email, password);
       router.replace(nextUrl);
+      setDisabled(false);
     } catch (e) {
+      setDisabled(false);
       setMsg(e.message || "Login gagal");
     }
   }
@@ -67,7 +71,12 @@ export default function LoginClient({ nextUrl = "/home" }) {
 
           <button
             type="submit"
-            className="w-full bg-[#01559A] text-white p-2 rounded hover:bg-blue-600 transition"
+            disabled={disabled}
+            className={`w-full ${
+              disabled
+                ? "bg-gray-400"
+                : "bg-[#01559A] hover:bg-[#0468ba] transition"
+            }  text-white p-2 rounded `}
           >
             Login
           </button>
