@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import EasyfixBugGraph from "@/components/EasyFixBugGraph";
 import { useRouter } from "next/navigation";
 import { logout } from "../_lib/auth-client";
+import LayoutCustom from "@/components/LayoutCustom";
 
 async function searchBugs({ q, limit = 25, dev_limit = 10, signal } = {}) {
   const qs = new URLSearchParams({
@@ -186,7 +187,7 @@ function useDebounce(value, delay = 500) {
   return v;
 }
 
-export default function SearchClient({  }) {
+export default function SearchClient({}) {
   const [q, setQ] = useState("");
   const [limit, setLimit] = useState(25);
   const [devLimit, setDevLimit] = useState(10);
@@ -265,7 +266,6 @@ export default function SearchClient({  }) {
   }
 
   const handleLogout = async () => {
-    
     try {
       await logout();
     } catch (e) {
@@ -327,45 +327,8 @@ export default function SearchClient({  }) {
     );
   }, [data, loading, mode]);
 
-
-  
   return (
-    <main className="w-full min-h-screen bg-gray-100">
-      <header className="w-full border-b border-[#e4e4e4] bg-white">
-        <div className="px-4 h-14 flex items-center justify-between">
-          <img src="/easyfix-logo.png" alt="EasyFix Logo" className="h-8" />
-
-          <div className="relative group">
-            <div className="w-8 h-8 rounded-full bg-gray-300 cursor-pointer" />
-
-            <div
-              className="
-                absolute right-0 top-full pt-2
-                opacity-0 invisible
-                group-hover:opacity-100 group-hover:visible
-                transition-opacity duration-150
-                z-50
-              "
-            >
-              <div className="w-40 bg-white border border-gray-200 rounded-md shadow-lg">
-                <button
-                  className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
-                  onClick={() => console.log("Edit Profile")}
-                >
-                  Edit Profile
-                </button>
-                <button
-                  className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-gray-100"
-                  onClick={() => handleLogout()}
-                >
-                  Logout
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-
+    <LayoutCustom>
       <div className=" mx-auto px-4 py-4 grid grid-cols-12 gap-4">
         <aside className="col-span-12 md:col-span-3 bg-white border border-[#e4e4e4] rounded-lg p-4">
           <h3 className="font-semibold mb-2">Search bug</h3>
@@ -504,6 +467,6 @@ export default function SearchClient({  }) {
           {mode === "graph" ? GraphPane : BugsList}
         </section>
       </div>
-    </main>
+    </LayoutCustom>
   );
 }
