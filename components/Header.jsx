@@ -3,6 +3,16 @@ import React from "react";
 
 function Header() {
   const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (e) {
+      console.error("Logout error", e);
+    } finally {
+      router.replace("/login");
+    }
+  };
   return (
     <header className="w-full border-b border-[#e4e4e4] bg-white">
       <div className="px-4 h-14 flex items-center justify-between">

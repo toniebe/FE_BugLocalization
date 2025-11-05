@@ -265,15 +265,7 @@ export default function SearchClient({}) {
     }
   }
 
-  const handleLogout = async () => {
-    try {
-      await logout();
-    } catch (e) {
-      console.error("Logout error", e);
-    } finally {
-      router.replace("/login");
-    }
-  };
+ 
 
   const BugsList = useMemo(() => {
     return (
