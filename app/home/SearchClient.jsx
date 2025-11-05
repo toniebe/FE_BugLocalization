@@ -2,6 +2,8 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import EasyfixBugGraph from "@/components/EasyFixBugGraph";
+import { useRouter } from "next/navigation";
+import { logout } from "../_lib/auth-client";
 
 async function searchBugs({ q, limit = 25, dev_limit = 10, signal } = {}) {
   const qs = new URLSearchParams({
@@ -184,7 +186,7 @@ function useDebounce(value, delay = 500) {
   return v;
 }
 
-export default function SearchClient() {
+export default function SearchClient({  }) {
   const [q, setQ] = useState("");
   const [limit, setLimit] = useState(25);
   const [devLimit, setDevLimit] = useState(10);
@@ -192,6 +194,7 @@ export default function SearchClient() {
   const [data, setData] = useState(SAMPLE);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
+  const router = useRouter();
 
   const debouncedQ = useDebounce(q, 500);
   const abortRef = useRef(null);
@@ -214,7 +217,7 @@ export default function SearchClient() {
     })
       .then((res) => setData(res))
       .catch((e) => {
-        if (e?.name === "AbortError") return; // diabaikan
+        if (e?.name === "AbortError") return;
         setErr(e?.message || "Search failed");
       })
       .finally(() => {
@@ -222,7 +225,6 @@ export default function SearchClient() {
         setLoading(false);
       });
 
-    // cleanup saat dependency berubah/unmount
     return () => ctrl.abort();
   }, [debouncedQ, limit, devLimit]);
 
@@ -232,7 +234,6 @@ export default function SearchClient() {
       setErr(q ? "Query minimal 2 karakter" : "Masukkan query");
       return;
     }
-    // batalkan request sebelumnya sebelum fire yang baru
     if (abortRef.current) abortRef.current.abort();
     const ctrl = new AbortController();
     abortRef.current = ctrl;
@@ -262,6 +263,17 @@ export default function SearchClient() {
       if (!loading) doSearch();
     }
   }
+
+  const handleLogout = async () => {
+    
+    try {
+      await logout();
+    } catch (e) {
+      console.error("Logout error", e);
+    } finally {
+      router.replace("/login");
+    }
+  };
 
   const BugsList = useMemo(() => {
     return (
@@ -312,16 +324,45 @@ export default function SearchClient() {
           <EasyfixBugGraph data={data} />
         </div>
       </div>
-
     );
   }, [data, loading, mode]);
 
+
+  
   return (
     <main className="w-full min-h-screen bg-gray-100">
       <header className="w-full border-b border-[#e4e4e4] bg-white">
-        <div className=" px-4 h-14 flex items-center justify-between">
+        <div className="px-4 h-14 flex items-center justify-between">
           <img src="/easyfix-logo.png" alt="EasyFix Logo" className="h-8" />
-          <div className="w-8 h-8 rounded-full bg-gray-300" />
+
+          <div className="relative group">
+            <div className="w-8 h-8 rounded-full bg-gray-300 cursor-pointer" />
+
+            <div
+              className="
+                absolute right-0 top-full pt-2
+                opacity-0 invisible
+                group-hover:opacity-100 group-hover:visible
+                transition-opacity duration-150
+                z-50
+              "
+            >
+              <div className="w-40 bg-white border border-gray-200 rounded-md shadow-lg">
+                <button
+                  className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                  onClick={() => console.log("Edit Profile")}
+                >
+                  Edit Profile
+                </button>
+                <button
+                  className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-gray-100"
+                  onClick={() => handleLogout()}
+                >
+                  Logout
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </header>
 
@@ -404,7 +445,6 @@ export default function SearchClient() {
           )}
 
           <div className="mt-6 text-sm flex items-center gap-3">
-
             <button
               onClick={() => {
                 const blob = new Blob([JSON.stringify(data, null, 2)], {
@@ -431,39 +471,10 @@ export default function SearchClient() {
         </aside>
 
         <section className="col-span-12 md:col-span-9">
-          <div className="w-full bg-white py-3 px-4 text-sm border border-[#e4e4e4] rounded-lg mb-3">
-            {/* <span className="font-medium text-[#0D5DB8]">View:</span> */}
-            {/* <span className="mx-2">
-              <button
-                onClick={() => setMode("graph")}
-                className={`underline-offset-4 ${
-                  mode === "graph"
-                    ? "text-[#0D5DB8] underline"
-                    : "text-gray-600 hover:underline"
-                }`}
-                type="button"
-              >
-                Graph
-              </button>
-            </span>
-            <span className="text-gray-400">/</span>
-            <span className="mx-2">
-              <button
-                onClick={() => setMode("list")}
-                className={`underline-offset-4 ${
-                  mode === "list"
-                    ? "text-[#0D5DB8] underline"
-                    : "text-gray-600 hover:underline"
-                }`}
-                type="button"
-              >
-                List
-              </button>
-            </span> */}
-
+          <div className="grid grid-cols-8 bg-white py-3 px-4 text-sm border border-[#e4e4e4] rounded-lg mb-3">
             <button
               onClick={() => setMode("graph")}
-              className={`px-3 py-1 rounded border ${
+              className={` px-3 py-1 rounded border ${
                 mode === "graph"
                   ? "bg-[#0D5DB8] text-white border-[#0D5DB8]"
                   : "bg-white text-gray-700 border-[#e4e4e4]"
@@ -486,7 +497,7 @@ export default function SearchClient() {
 
             {loading && <span className="ml-3 text-gray-500">Loading…</span>}
             {!loading && data?.bugs?.length === 0 && (
-              <span className="ml-3 text-gray-500">No results</span>
+              <span className="ml-3 my-auto text-gray-500">No results</span>
             )}
           </div>
 
