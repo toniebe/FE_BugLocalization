@@ -67,17 +67,6 @@ function buildElements(data) {
       data: { id: devId, type: "dev", email, freq: d.freq, score: d.score },
     });
 
-    // Tambahan: edge langsung dari QUERY ke DEV (berat berdasarkan score)
-    const devWeight = Math.max(1, Math.round((d.score ?? 0) / 1000));
-    els.push({
-      data: {
-        id: `query->${devId}`,
-        source: "query",
-        target: devId,
-        rel: "q_dev",
-        weight: devWeight,
-      },
-    });
   }
 
   // 5) Edge dev->bug (tetap dipertahankan)
