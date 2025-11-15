@@ -24,10 +24,9 @@ async function request(url, init = {}, { timeoutMs = 15000 } = {}) {
 
 
 export async function searchBugs({ q, limit = 25, dev_limit = 10 }) {
-  const qs = new URLSearchParams({
-    q,
-    limit: String(limit),
-    dev_limit: String(dev_limit),
-  }).toString();
-  return request(`/api/search?${qs}`, { method: "GET" });
+  return request("/api/search", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ q, limit, dev_limit }),
+  });
 }

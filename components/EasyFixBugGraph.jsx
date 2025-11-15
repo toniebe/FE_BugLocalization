@@ -66,7 +66,6 @@ function buildElements(data) {
     els.push({
       data: { id: devId, type: "dev", email, freq: d.freq, score: d.score },
     });
-
   }
 
   // 5) Edge dev->bug (tetap dipertahankan)
@@ -368,15 +367,12 @@ export default function EasyfixBugGraph({ data }) {
           cy.fit(undefined, 40);
           cy.center();
 
-          // Klik BUG => buka Bugzilla
+    
           cy.on("tap", "node", (evt) => {
             const id = evt.target.id();
             if (id.startsWith("bug:")) {
               const bugNum = id.split(":")[1];
-              window.open(
-                `https://bugzilla.mozilla.org/show_bug.cgi?id=${bugNum}`,
-                "_blank"
-              );
+              window.location.href = `/bugs/${bugNum}`;
             }
           });
         }}

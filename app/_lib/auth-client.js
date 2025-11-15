@@ -18,6 +18,7 @@ export async function login(email, password) {
   return r.json();
 }
 
+
 export async function logout() {
   await fetch("/api/auth/logout", { method: "POST" });
 }

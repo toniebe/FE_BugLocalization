@@ -7,17 +7,19 @@ import { logout } from "../_lib/auth-client";
 import LayoutCustom from "@/components/LayoutCustom";
 
 async function searchBugs({ q, limit = 25, dev_limit = 10, signal } = {}) {
-  const qs = new URLSearchParams({
-    q,
-    limit: String(limit),
-    dev_limit: String(dev_limit),
-  }).toString();
-
-  const res = await fetch(`/api/search?${qs}`, {
-    method: "GET",
+  const res = await fetch("/api/search", {
+    method: "POST",
     cache: "no-store",
     signal,
-    headers: { accept: "application/json" },
+    headers: {
+      "content-type": "application/json",
+      accept: "application/json",
+    },
+    body: JSON.stringify({
+      q,
+      limit,
+      dev_limit,
+    }),
   });
 
   let data = null;
@@ -39,8 +41,10 @@ async function searchBugs({ q, limit = 25, dev_limit = 10, signal } = {}) {
     err.upstream = data || text;
     throw err;
   }
+
   return data ?? (text ? { text } : null);
 }
+
 
 const SAMPLE = {
   query: "app crash when open",
@@ -268,37 +272,46 @@ export default function SearchClient({}) {
  
 
   const BugsList = useMemo(() => {
-    return (
-      <div className="bg-white border border-[#e4e4e4] rounded-lg p-4 h-[calc(100vh-7rem)] overflow-auto">
-        {!data?.bugs?.length ? (
-          <div className="text-sm text-gray-500">Tidak ada hasil.</div>
-        ) : (
-          <ul className="space-y-3">
-            {data.bugs.map((b) => (
-              <li key={b.id} className="border rounded p-3">
-                <div className="font-medium">{b.summary}</div>
-                <div className="text-xs text-gray-600 mt-1">
-                  <span className="mr-2">ID: {b.id}</span>
-                  <span className="mr-2">Status: {b.status}</span>
-                  {b.topic_label && (
-                    <span className="mr-2">Topic: {b.topic_label}</span>
-                  )}
-                  {typeof b.topic_score === "number" && (
-                    <span>Score: {b.topic_score.toFixed(3)}</span>
-                  )}
-                </div>
-                {b.assigned_to && (
-                  <div className="text-xs text-gray-600 mt-1">
-                    Assignee: {b.assigned_to}
-                  </div>
+  return (
+    <div className="bg-white border border-[#e4e4e4] rounded-lg p-4 h-[calc(100vh-7rem)] overflow-auto">
+      {!data?.bugs?.length ? (
+        <div className="text-sm text-gray-500">Tidak ada hasil.</div>
+      ) : (
+        <ul className="space-y-3">
+          {data.bugs.map((b) => (
+            <li
+              key={b.id}
+              onClick={() => router.push(`/bugs/${b.id}`)}
+              className="border rounded-lg p-3 cursor-pointer hover:border-[#0D5DB8] hover:bg-blue-50/40 transition-colors"
+            >
+              <div className="font-medium text-sm text-gray-900">
+                {b.summary || b.title}
+              </div>
+              <div className="text-xs text-gray-600 mt-1">
+                <span className="mr-2">ID: {b.id}</span>
+                <span className="mr-2">Status: {b.status}</span>
+                {b.topic_label && (
+                  <span className="mr-2">Topic: {b.topic_label}</span>
                 )}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-    );
-  }, [data]);
+                {typeof b.topic_score === "number" && (
+                  <span>Score: {b.topic_score.toFixed(3)}</span>
+                )}
+              </div>
+              {b.assigned_to && (
+                <div className="text-xs text-gray-600 mt-1">
+                  Assignee:{" "}
+                  {typeof b.assigned_to === "string"
+                    ? b.assigned_to
+                    : b.assigned_to.email || b.assigned_to.name}
+                </div>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}, [data, router]);
 
   const GraphPane = useMemo(() => {
     return (
