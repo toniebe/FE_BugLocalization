@@ -17,7 +17,14 @@ function Header() {
   return (
     <header className="w-full border-b border-[#e4e4e4] bg-white">
       <div className="px-4 h-14 flex items-center justify-between">
-        <img src="/easyfix-logo.png" alt="EasyFix Logo" className="h-8" />
+        <button
+          className="text-[#0D5DB8] font-semibold text-left px-3 py-2 text-sm"
+          onClick={() => {
+            router.push("/home");
+          }}
+        >
+          <img src="/easyfix-logo.png" alt="EasyFix Logo" className="h-8" />
+        </button>
         <div>
           <button
             className="text-[#0D5DB8] font-semibold text-left px-3 py-2 text-sm"
@@ -51,7 +58,7 @@ function Header() {
             <div className="w-40 bg-white border border-gray-200 rounded-md shadow-lg">
               <button
                 className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
-                onClick={() => console.log("Edit Profile")}
+                onClick={() => router.push("/profile")}
               >
                 Edit Profile
               </button>
