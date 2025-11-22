@@ -1,6 +1,6 @@
-// app/api/auth/login/route.js
-import { NextResponse } from "next/server";
 import { apiFetch } from "@/app/_lib/fetcher";
+import { NextResponse } from "next/server";
+
 
 export async function POST(req) {
   try {
@@ -11,12 +11,14 @@ export async function POST(req) {
       body: JSON.stringify(body),
     });
 
-    // SESUAIKAN FIELD DENGAN RESPONSE DARI FASTAPI
-    // Kalau FastAPI mengembalikan id_token, refresh_token, expires_in, local_id, email
+   
+
     const res = NextResponse.json({
       ok: true,
       uid: data.local_id ?? data.uid,
       email: data.email,
+      organization_name: data.organization_name ?? null,
+      project_name: data.project_name ?? null,
     });
 
     const maxAge = data.expires_in
@@ -33,14 +35,20 @@ export async function POST(req) {
       maxAge,
     };
 
-    // Perhatikan nama field
     res.cookies.set("id_token", data.id_token ?? data.idToken, cookieOpts);
 
     if (data.refresh_token ?? data.refreshToken) {
       res.cookies.set("refresh_token", data.refresh_token ?? data.refreshToken, {
         ...cookieOpts,
-        maxAge: 60 * 60 * 24 * 30,
+        maxAge: 60 * 60 * 24 * 30, 
       });
+    }
+
+    if (data.organization_name) {
+      res.cookies.set("org_name", data.organization_name, cookieOpts);
+    }
+    if (data.project_name) {
+      res.cookies.set("project_name", data.project_name, cookieOpts);
     }
 
     return res;

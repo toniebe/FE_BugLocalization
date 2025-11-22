@@ -13,19 +13,34 @@ export default function LoginClient({ nextUrl = "/home" }) {
   const router = useRouter();
   const [disabled, setDisabled] = useState(false);
 
-  async function onSubmit(e) {
+  const onSubmit = async (e) => {
     e.preventDefault();
     setMsg("");
+    setDisabled(true);
+
     try {
-      setDisabled(true);
-      await login(email, password);
-      router.replace(nextUrl);
+      const data = await login(email, password);
+
+      if (data.organization_name) {
+        localStorage.setItem("organization_name", data.organization_name);
+      }
+      if (data.project_name) {
+        localStorage.setItem("project_name", data.project_name);
+      }
+      console.log("Login successful:", data);
+
+      if (!data.project_name || !data.project_name == null) {
+        router.push("/onboarding");
+      } else {
+        router.push("/home");
+      }
+    } catch (err) {
+      console.error("Login error:", err);
+      setMsg(err.message || "Login failed");
+    } finally {
       setDisabled(false);
-    } catch (e) {
-      setDisabled(false);
-      setMsg(e.message || "Login gagal");
     }
-  }
+  };
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-gray-100">
