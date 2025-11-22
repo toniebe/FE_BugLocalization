@@ -5,182 +5,10 @@ import EasyfixBugGraph from "@/components/EasyFixBugGraph";
 import { useRouter } from "next/navigation";
 import { logout } from "../_lib/auth-client";
 import LayoutCustom from "@/components/LayoutCustom";
+import { searchBugs } from "../_lib/search-client"; // ⬅️ pakai helper baru
+import { bug_sample_data } from "./data";
 
-async function searchBugs({ q, limit = 25, dev_limit = 10, signal } = {}) {
-  const res = await fetch("/api/search", {
-    method: "POST",
-    cache: "no-store",
-    signal,
-    headers: {
-      "content-type": "application/json",
-      accept: "application/json",
-    },
-    body: JSON.stringify({
-      q,
-      limit,
-      dev_limit,
-    }),
-  });
-
-  let data = null;
-  let text = null;
-  try {
-    data = await res.clone().json();
-  } catch {}
-  if (!data) {
-    try {
-      text = await res.text();
-    } catch {}
-  }
-
-  if (!res.ok) {
-    const msg =
-      (data && (data.detail || data.error)) || text || `HTTP ${res.status}`;
-    const err = new Error(msg);
-    err.status = res.status;
-    err.upstream = data || text;
-    throw err;
-  }
-
-  return data ?? (text ? { text } : null);
-}
-
-
-const SAMPLE = {
-  query: "app crash when open",
-  bugs: [
-    {
-      id: 1931228,
-      summary: "Include app version when storing a crash",
-      assigned_to: "mtighe@mozilla.com",
-      status: "RESOLVED",
-      resolution: "FIXED",
-      topic: null,
-      topic_label: "UI: Toolbar / PDF / Android",
-      topic_score: 0.6009,
-    },
-    {
-      id: 1965490,
-      summary: "New messaging ACTION to open app",
-      assigned_to: "anpopa@mozilla.com",
-      status: "NEW",
-      resolution: null,
-      topic: null,
-      topic_label: "Search / Telemetry / History",
-      topic_score: 0.6263,
-    },
-    {
-      id: 1912002,
-      summary: "Auto-open PiP on app switch",
-      assigned_to: "danieleferla1@gmail.com",
-      status: "ASSIGNED",
-      resolution: null,
-      topic: null,
-      topic_label: "Search / Telemetry / History",
-      topic_score: 0.85,
-    },
-    {
-      id: 1979967,
-      summary: "Accessibility annotation for disabled 'Open in app' button",
-      assigned_to: "azinovyev@mozilla.com",
-      status: "RESOLVED",
-      resolution: "FIXED",
-      topic: null,
-      topic_label: "Search / Telemetry / History",
-      topic_score: 0.6555,
-    },
-    {
-      id: 1899329,
-      summary: '[Menu Redesign] Implement "Open in app" menu functionality',
-      assigned_to: "smathiyarasan@mozilla.com",
-      status: "RESOLVED",
-      resolution: "FIXED",
-      topic: null,
-      topic_label: "Search / Telemetry / History",
-      topic_score: 0.8875,
-    },
-    {
-      id: 1929028,
-      summary:
-        "website loads in background while ask to open in app prompt is open",
-      assigned_to: "royang@mozilla.com",
-      status: "RESOLVED",
-      resolution: "FIXED",
-      topic: null,
-      topic_label: "Search / Telemetry / History",
-      topic_score: 0.7812,
-    },
-    {
-      id: 1930355,
-      summary: "Open in app also opens website from a search",
-      assigned_to: "tthibaud@mozilla.com",
-      status: "RESOLVED",
-      resolution: "FIXED",
-      topic: null,
-      topic_label: "Search / Telemetry / History",
-      topic_score: 0.8714,
-    },
-    {
-      id: 1936952,
-      summary: "[Headless] nsColorPicker::Open crash under automation",
-      assigned_to: "hskupin@gmail.com",
-      status: "RESOLVED",
-      resolution: "FIXED",
-      topic: null,
-      topic_label: "Search / Telemetry / History",
-      topic_score: 0.275,
-    },
-    {
-      id: 1992083,
-      summary: "The open in app prompt buttons text is barely visible",
-      assigned_to: "mcarare@mozilla.com",
-      status: "VERIFIED",
-      resolution: "FIXED",
-      topic: null,
-      topic_label: "Search / Telemetry / History",
-      topic_score: 0.5549,
-    },
-    {
-      id: 1979924,
-      summary:
-        'Crash when opening "Report Broken Site" screen while app is in Russian (RU) locale',
-      assigned_to: "apindiprolu@mozilla.com",
-      status: "VERIFIED",
-      resolution: "FIXED",
-      topic: null,
-      topic_label: "Search / Telemetry / History",
-      topic_score: 0.677,
-    },
-  ],
-  developers: [
-    { developer: "emilio@crisal.io", freq: 1554, score: 7981.103328227997 },
-    { developer: "dao+bmo@mozilla.com", freq: 1147, score: 5858.826421260834 },
-    {
-      developer: "wptsync@mozilla.bugs",
-      freq: 1177,
-      score: 5710.8364906311035,
-    },
-    {
-      developer: "twisniewski@mozilla.com",
-      freq: 914,
-      score: 4667.319995880127,
-    },
-    { developer: "petru@mozilla.com", freq: 770, score: 3938.82492351532 },
-    {
-      developer: "nchevobbe@mozilla.com",
-      freq: 430,
-      score: 2216.0865864753723,
-    },
-    { developer: "nsharpley@mozilla.com", freq: 430, score: 2209.679582118988 },
-    { developer: "giorga@mozilla.com", freq: 426, score: 2182.430679798126 },
-    { developer: "royang@mozilla.com", freq: 419, score: 2153.2524094581604 },
-    {
-      developer: "rmalicdem@mozilla.com",
-      freq: 351,
-      score: 1798.0578722953796,
-    },
-  ],
-};
+const SAMPLE = bug_sample_data
 
 function useDebounce(value, delay = 500) {
   const [v, setV] = useState(value);
@@ -191,7 +19,7 @@ function useDebounce(value, delay = 500) {
   return v;
 }
 
-export default function SearchClient({}) {
+export default function SearchClient() {
   const [q, setQ] = useState("");
   const [limit, setLimit] = useState(25);
   const [devLimit, setDevLimit] = useState(10);
@@ -199,13 +27,27 @@ export default function SearchClient({}) {
   const [data, setData] = useState(SAMPLE);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
-  const router = useRouter();
 
+  const [orgName, setOrgName] = useState("");
+  const [projectName, setProjectName] = useState("");
+
+  const router = useRouter();
   const debouncedQ = useDebounce(q, 500);
   const abortRef = useRef(null);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+    const org = localStorage.getItem("organization_name") || "";
+    const proj = localStorage.getItem("project_name") || "";
+    setOrgName(org);
+    setProjectName(proj);
+  }, []);
+
+  useEffect(() => {
     if (!debouncedQ || debouncedQ.length < 2) return;
+    if (!orgName || !projectName) {
+      return;
+    }
 
     if (abortRef.current) abortRef.current.abort();
     const ctrl = new AbortController();
@@ -218,9 +60,13 @@ export default function SearchClient({}) {
       q: debouncedQ,
       limit,
       dev_limit: devLimit,
+      organization: orgName,
+      project: projectName,
       signal: ctrl.signal,
     })
-      .then((res) => setData(res))
+      .then((res) => {
+        setData(res);
+      })
       .catch((e) => {
         if (e?.name === "AbortError") return;
         setErr(e?.message || "Search failed");
@@ -231,14 +77,18 @@ export default function SearchClient({}) {
       });
 
     return () => ctrl.abort();
-  }, [debouncedQ, limit, devLimit]);
+  }, [debouncedQ, limit, devLimit, orgName, projectName]);
 
-  // tombol Search (manual trigger)
   async function doSearch() {
     if (!q || q.length < 2) {
       setErr(q ? "Query minimal 2 karakter" : "Masukkan query");
       return;
     }
+    if (!orgName || !projectName) {
+      setErr("Organization and project are not set. Please finish onboarding.");
+      return;
+    }
+
     if (abortRef.current) abortRef.current.abort();
     const ctrl = new AbortController();
     abortRef.current = ctrl;
@@ -251,11 +101,15 @@ export default function SearchClient({}) {
         q,
         limit,
         dev_limit: devLimit,
+        organization: orgName,
+        project: projectName,
         signal: ctrl.signal,
       });
       setData(res);
     } catch (e) {
-      if (e?.name !== "AbortError") setErr(e?.message || "Search failed");
+      if (e?.name !== "AbortError") {
+        setErr(e?.message || "Search failed");
+      }
     } finally {
       if (abortRef.current === ctrl) abortRef.current = null;
       setLoading(false);
@@ -269,49 +123,99 @@ export default function SearchClient({}) {
     }
   }
 
- 
+  const graphData = useMemo(() => {
+    if (!data) return null;
+
+    // Normalisasi bugs -> pakai field yang cocok untuk graph/list
+    const bugs = (data.bugs || []).map((b) => ({
+      id: b.bug_id, // sebelumnya mungkin pakai b.id
+      bug_id: b.bug_id,
+      summary: b.title, // mapping ke summary
+      title: b.title,
+      description: b.description,
+      status: b.status,
+      created_at: b.created_at,
+      // pakai 'score' sebagai topic_score / similarity score
+      topic_score:
+        typeof b.score === "number" ? b.score : Number(b.score) || null,
+    }));
+
+    // Normalisasi developers
+    const developers = (data.developers || []).map((d) => ({
+      id: d.developer_id,
+      developer_id: d.developer_id,
+      developer: d.email || d.name, // biar kompatibel dengan kode lama
+      name: d.name,
+      email: d.email,
+      bug_ids: d.bug_ids || [],
+      total_fixed_bugs: d.total_fixed_bugs,
+    }));
+
+    // Normalisasi commits (kalau graph kamu sudah support commit node)
+    const commits = (data.commits || []).map((c) => ({
+      id: c.commit_id,
+      commit_id: c.commit_id,
+      hash: c.hash,
+      message: c.message,
+      repository: c.repository,
+      committed_at: c.committed_at,
+      bug_ids: c.bug_ids || [],
+    }));
+
+    // edges sudah siap dipakai
+    const edges = Array.isArray(data.edges) ? data.edges : [];
+
+    return {
+      query: data.query,
+      limit: data.limit,
+      bugs,
+      developers,
+      commits,
+      edges,
+    };
+  }, [data]);
 
   const BugsList = useMemo(() => {
-  return (
-    <div className="bg-white border border-[#e4e4e4] rounded-lg p-4 h-[calc(100vh-7rem)] overflow-auto">
-      {!data?.bugs?.length ? (
-        <div className="text-sm text-gray-500">Tidak ada hasil.</div>
-      ) : (
-        <ul className="space-y-3">
-          {data.bugs.map((b) => (
-            <li
-              key={b.id}
-              onClick={() => router.push(`/bugs/${b.id}`)}
-              className="border rounded-lg p-3 cursor-pointer hover:border-[#0D5DB8] hover:bg-blue-50/40 transition-colors"
-            >
-              <div className="font-medium text-sm text-gray-900">
-                {b.summary || b.title}
-              </div>
-              <div className="text-xs text-gray-600 mt-1">
-                <span className="mr-2">ID: {b.id}</span>
-                <span className="mr-2">Status: {b.status}</span>
-                {b.topic_label && (
-                  <span className="mr-2">Topic: {b.topic_label}</span>
-                )}
-                {typeof b.topic_score === "number" && (
-                  <span>Score: {b.topic_score.toFixed(3)}</span>
-                )}
-              </div>
-              {b.assigned_to && (
-                <div className="text-xs text-gray-600 mt-1">
-                  Assignee:{" "}
-                  {typeof b.assigned_to === "string"
-                    ? b.assigned_to
-                    : b.assigned_to.email || b.assigned_to.name}
+    return (
+      <div className="bg-white border border-[#e4e4e4] rounded-lg p-4 h-[calc(100vh-7rem)] overflow-auto">
+        {!data?.bugs?.length ? (
+          <div className="text-sm text-gray-500">Tidak ada hasil.</div>
+        ) : (
+          <ul className="space-y-3">
+            {data.bugs.map((b) => (
+              <li
+                key={b.id}
+                onClick={() => router.push(`/bugs/${b.id}`)}
+                className="border rounded-lg p-3 cursor-pointer hover:border-[#0D5DB8] hover:bg-blue-50/40 transition-colors"
+              >
+                <div className="font-medium text-sm text-gray-900">
+                  {b.summary || b.title}
                 </div>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-}, [data, router]);
+                <div className="text-xs text-gray-600 mt-1">
+                  <span className="mr-2">ID: {b.id}</span>
+                  <span className="mr-2">Status: {b.status}</span>
+                  {b.topic_label && (
+                    <span className="mr-2">Topic: {b.topic_label}</span>
+                  )}
+                  {typeof b.topic_score === "number" && (
+                    <span>Score: {b.topic_score.toFixed(3)}</span>
+                  )}
+                </div>
+                {b.assigned_to && (
+                  <div className="text-xs text-gray-600 mt-1">
+                    Assignee:{" "}
+                    {typeof b.assigned_to === "string"
+                      ? b.assigned_to
+                      : b.assigned_to.email || b.assigned_to.name}
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    );
+  }, [data, router]);
 
   const GraphPane = useMemo(() => {
     return (
@@ -326,7 +230,16 @@ export default function SearchClient({}) {
         )}
 
         <div className="w-full h-full ">
-          <EasyfixBugGraph data={data} />
+          <EasyfixBugGraph
+            data={
+              graphData || {
+                bugs: [],
+                developers: [],
+                commits: [],
+                edges: [],
+              }
+            }
+          />
         </div>
       </div>
     );
@@ -334,9 +247,16 @@ export default function SearchClient({}) {
 
   return (
     <LayoutCustom>
-      <div className=" mx-auto px-4 py-4 grid grid-cols-12 gap-4">
+      <div className="mx-auto px-4 py-4 grid grid-cols-12 gap-4">
         <aside className="col-span-12 md:col-span-3 bg-white border border-[#e4e4e4] rounded-lg p-4">
           <h3 className="font-semibold mb-2">Search bug</h3>
+
+          {orgName && projectName && (
+            <p className="text-[11px] text-gray-500 mb-2">
+              Project: <span className="font-semibold">{orgName}</span> /{" "}
+              <span className="font-semibold">{projectName}</span>
+            </p>
+          )}
 
           <label className="text-sm text-gray-500">Input your query</label>
           <input

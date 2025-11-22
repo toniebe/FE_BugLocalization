@@ -10,6 +10,7 @@ export default function Register({ nextPath = "/home" }) {
   const [pwd2, setPwd2] = useState("");
   const [msg, setMsg] = useState("");
   const [disabled, setDisabled] = useState(false);
+  const [display_name, setDisplay_name] = useState("");
 
   async function onSubmit(e) {
     e.preventDefault();
@@ -20,7 +21,7 @@ export default function Register({ nextPath = "/home" }) {
     }
     try {
       setDisabled(true);
-      await signup(email, pwd);
+      await signup(email, pwd,display_name);
       // redirect manual jika perlu:
       window.location.replace(nextPath);
       setDisabled(false);
@@ -41,6 +42,12 @@ export default function Register({ nextPath = "/home" }) {
             <label className="block text-gray-700">Email</label>
             <input type="email" className="w-full mt-1 p-2 border rounded border-[#44444E]"
                    value={email} onChange={(e)=>setEmail(e.target.value)} required />
+          </div>
+          <div>
+            <label className="block text-gray-700">Display Name</label>
+            <input type="text" className="w-full mt-1 p-2 border rounded border-[#44444E]"
+                   value={display_name} onChange={(e)=>setDisplay_name(e.target.value)} required />
+
           </div>
           <div>
             <label className="block text-gray-700">Password</label>

@@ -1,4 +1,3 @@
-// app/api/search/route.js
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
@@ -11,9 +10,27 @@ export async function POST(req) {
   const limit = body.limit ?? 25;
   const dev_limit = body.dev_limit ?? 10;
 
+
+  const organization =
+    body.organization ||
+    body.organization_name ||
+    body.org ||
+    "";
+  const project =
+    body.project ||
+    body.project_name ||
+    "";
+
   if (!q || q.length < 2) {
     return NextResponse.json(
       { error: "Query `q` minimal 2 karakter" },
+      { status: 400 }
+    );
+  }
+
+  if (!organization || !project) {
+    return NextResponse.json(
+      { error: "organization dan project wajib diisi" },
       { status: 400 }
     );
   }
@@ -28,10 +45,12 @@ export async function POST(req) {
     );
   }
 
-  const upstream = `${API_BASE}/search`; // <-- TANPA query string
+  const upstream = `${API_BASE}/api/projects/${encodeURIComponent(
+    organization
+  )}/${encodeURIComponent(project)}/search-bugs`;
 
   const r = await fetch(upstream, {
-    method: "POST",           // <-- ini yang bikin FastAPI nerima POST
+    method: "POST",
     cache: "no-store",
     headers: {
       "content-type": "application/json",
@@ -39,9 +58,9 @@ export async function POST(req) {
       Authorization: `Bearer ${idToken}`,
     },
     body: JSON.stringify({
-      query: q,               // <-- Cocok dengan SearchRequest.query
-      limit: Number(limit),
-      dev_limit: Number(dev_limit),
+      query: q,              
+      limit: Number(limit),  
+      dev_limit: Number(dev_limit), 
     }),
   });
 

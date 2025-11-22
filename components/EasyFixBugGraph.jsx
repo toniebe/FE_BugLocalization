@@ -11,194 +11,220 @@ if (typeof window !== "undefined" && !window.__easyfixDagreRegistered) {
   window.__easyfixDagreRegistered = true;
 }
 
-function buildElements(data) {
+function buildElements(raw) {
+  const data = raw || {};
+
   const els = [];
+  const nodeIds = new Set();
+  const edgeIds = new Set();
+
+  const bugs = Array.isArray(data.bugs) ? data.bugs : [];
+  const developers = Array.isArray(data.developers) ? data.developers : [];
+  const commits = Array.isArray(data.commits) ? data.commits : [];
+  const relEdges = Array.isArray(data.edges) ? data.edges : [];
+
   const norm = (s) => (s || "").trim().toLowerCase();
 
   // 1) Node QUERY
-  els.push({ data: { id: "query", type: "query", title: data.query } });
+  els.push({
+    data: {
+      id: "query",
+      type: "query",
+      title: data.query || "",
+    },
+  });
+  nodeIds.add("query");
 
-  // 2) BUG nodes + edges query->bug
-  for (const b of data.bugs || []) {
-    const bugId = `bug:${b.id}`;
+  // index dev & commit by id
+  const devMap = new Map();
+  developers.forEach((d) => {
+    const key = String(d.developer_id ?? d.id ?? d.email ?? d.name);
+    devMap.set(key, d);
+  });
+
+  const commitMap = new Map();
+  commits.forEach((c) => {
+    const key = String(c.commit_id ?? c.id ?? c.hash);
+    commitMap.set(key, c);
+  });
+
+  const bugMap = new Map();
+
+  const ensureBugNode = (bugId, bugObj = null) => {
+    const key = String(bugId);
+    if (bugMap.has(key)) return bugMap.get(key);
+
+    const cyId = `bug:${key}`;
+    if (!nodeIds.has(cyId)) {
+      els.push({
+        data: {
+          id: cyId,
+          type: "bug",
+          bug_id: key,
+          summary: bugObj?.summary || bugObj?.title || "",
+          status: bugObj?.status || "",
+          resolution: bugObj?.resolution || "",
+          topic_label: bugObj?.topic_label || "",
+          topic_score: bugObj?.topic_score ?? bugObj?.score ?? 0,
+          created_at: bugObj?.created_at || "",
+        },
+      });
+      nodeIds.add(cyId);
+    }
+    bugMap.set(key, cyId);
+    return cyId;
+  };
+
+  const ensureDevNode = (devId) => {
+    if (!devId) return null;
+    const key = String(devId);
+    const cyId = `dev:${key}`;
+    if (nodeIds.has(cyId)) return cyId;
+
+    const d = devMap.get(key);
+    const label = d?.email || d?.name || key;
     els.push({
       data: {
-        id: bugId,
-        type: "bug",
-        bug_id: String(b.id),
-        summary: b.summary,
-        status: b.status,
-        resolution: b.resolution ?? "",
-        topic_label: b.topic_label ?? "",
-        topic_score: b.topic_score ?? 0,
+        id: cyId,
+        type: "dev",
+        developer_id: key,
+        email: label,
+        name: d?.name || "",
+        bug_ids: d?.bug_ids || [],
       },
     });
+    nodeIds.add(cyId);
+    return cyId;
+  };
 
-    const weight = Math.max(1, Math.round((b.topic_score ?? 0) * 5));
+  const ensureCommitNode = (commitId) => {
+    if (!commitId) return null;
+    const key = String(commitId);
+    const cyId = `commit:${key}`;
+    if (nodeIds.has(cyId)) return cyId;
+
+    const c = commitMap.get(key);
     els.push({
       data: {
-        id: `query->${bugId}`,
-        source: "query",
-        target: bugId,
-        rel: "matches",
-        weight,
+        id: cyId,
+        type: "commit",
+        commit_id: key,
+        hash: c?.hash || key,
+        message: c?.message || "",
+        repository: c?.repository || "",
+        bug_ids: c?.bug_ids || [],
       },
     });
+    nodeIds.add(cyId);
+    return cyId;
+  };
+
+  // 2) BUG nodes + edge query->bug
+  for (const b of bugs) {
+    const bid = String(b.id ?? b.bug_id ?? b.bugId);
+    const bugCyId = ensureBugNode(bid, b);
+
+    const score =
+      typeof b.topic_score === "number"
+        ? b.topic_score
+        : typeof b.score === "number"
+        ? b.score
+        : 0;
+
+    const weight = Math.max(1, Math.round(score * 5)) || 1;
+
+    const edgeId = `query->${bugCyId}`;
+    if (!edgeIds.has(edgeId)) {
+      els.push({
+        data: {
+          id: edgeId,
+          source: "query",
+          target: bugCyId,
+          rel: "matches",
+          weight,
+        },
+      });
+      edgeIds.add(edgeId);
+    }
   }
 
-  // 3) Hanya dev yang benar-benar “connected”
-  const allDevEmails = new Set(
-    (data.developers || []).map((d) => norm(d.developer))
-  );
-  const connectedDevEmails = new Set();
-  for (const b of data.bugs || []) {
-    const assignee = norm(b.assigned_to);
-    if (assignee && allDevEmails.has(assignee))
-      connectedDevEmails.add(assignee);
-  }
+  // 3) Edges dari payload (bug-dev, bug-commit, dll.)
+  for (const e of relEdges) {
+    const sourceType = norm(e.source_type);
+    const targetType = norm(e.target_type);
+    const relType = norm(e.relation_type);
 
-  // 4) Dev nodes
-  for (const d of data.developers || []) {
-    const email = norm(d.developer);
-    if (!connectedDevEmails.has(email)) continue;
+    let srcCyId = null;
+    let tgtCyId = null;
 
-    const devId = `dev:${email}`;
-    els.push({
-      data: { id: devId, type: "dev", email, freq: d.freq, score: d.score },
-    });
-  }
+    if (sourceType === "bug") {
+      srcCyId = ensureBugNode(e.source_id);
+    } else if (sourceType === "developer") {
+      srcCyId = ensureDevNode(e.source_id);
+    } else if (sourceType === "commit") {
+      srcCyId = ensureCommitNode(e.source_id);
+    }
 
-  // 5) Edge dev->bug (tetap dipertahankan)
-  for (const b of data.bugs || []) {
-    const assignee = norm(b.assigned_to);
-    if (!assignee || !connectedDevEmails.has(assignee)) continue;
-    els.push({
-      data: {
-        id: `dev:${assignee}->bug:${b.id}`,
-        source: `dev:${assignee}`,
-        target: `bug:${b.id}`,
-        rel: "assigned_to",
-      },
-    });
+    if (targetType === "bug") {
+      tgtCyId = ensureBugNode(e.target_id);
+    } else if (targetType === "developer") {
+      tgtCyId = ensureDevNode(e.target_id);
+    } else if (targetType === "commit") {
+      tgtCyId = ensureCommitNode(e.target_id);
+    }
+
+    if (!srcCyId || !tgtCyId) continue;
+
+    let rel = relType;
+    if (relType === "assigned_to") rel = "assigned_to";
+    else if (relType === "fixed_in") rel = "fixed_in";
+
+    const edgeId = `${srcCyId}->${tgtCyId}:${rel}`;
+    if (!edgeIds.has(edgeId)) {
+      els.push({
+        data: {
+          id: edgeId,
+          source: srcCyId,
+          target: tgtCyId,
+          rel,
+        },
+      });
+      edgeIds.add(edgeId);
+    }
   }
 
   return els;
 }
 
-function placeDevelopersAroundBugs(cy) {
-  //mapping bug -> dev nodes
-  const bugToDevs = new Map();
-  cy.edges('[rel = "assigned_to"]').forEach((e) => {
-    const dev = e.source();
-    const bug = e.target();
-    if (bug.data("type") !== "bug" || dev.data("type") !== "dev") return;
-    const key = bug.id();
-    if (!bugToDevs.has(key)) bugToDevs.set(key, []);
-    bugToDevs.get(key).push(dev);
-  });
+// Fungsi kecil untuk “merenggangkan” commit yang terlalu mepet
+function separateCommits(cy) {
+  const commits = cy.nodes('node[type = "commit"]');
+  const ITER = 8;
+  const MIN_DIST = 60; // jarak minimal antar commit
 
-  const willCollide = (x, y, selfId, padding = 6) => {
-    let collide = false;
-    cy.nodes().forEach((n) => {
-      if (n.id() === selfId) return;
-      const p = n.position();
-      const rSelf = 28; // ~ radius dev
-      const rOther =
-        n.data("type") === "bug" ? 30 : n.data("type") === "query" ? 30 : 28;
-      const minDist = rSelf + rOther + padding;
-      const dx = x - p.x;
-      const dy = y - p.y;
-      const dist = Math.hypot(dx, dy);
-      if (dist < minDist) collide = true;
-    });
-    return collide;
-  };
-
-  cy.batch(() => {
-    let bugIndex = 0;
-    bugToDevs.forEach((devNodes, bugId) => {
-      const bug = cy.getElementById(bugId);
-      const bp = bug.position();
-
-      const baseRadius = 110;
-      let radius = baseRadius;
-
-      let startAngle = (bugIndex % 8) * (Math.PI / 4); // 0,45°,90°,... (rad)
-      bugIndex++;
-
-      const n = devNodes.length;
-      const angleStep = (Math.PI * 2) / Math.max(6, n);
-
-      // cari posisi aman untuk tiap dev
-      devNodes.forEach((d, i) => {
-        let placed = false;
-        let tries = 0;
-        const jitter = (i % 3) * 0.08;
-
-        while (!placed && tries < 20) {
-          const theta = startAngle + i * angleStep + jitter + tries * 0.07;
-          const x = bp.x + radius * Math.cos(theta);
-          const y = bp.y + radius * Math.sin(theta);
-
-          if (!willCollide(x, y, d.id(), 6)) {
-            d.position({ x, y });
-            d.lock();
-            placed = true;
-          } else {
-            radius += 10;
-            tries++;
-          }
-        }
-
-        if (!placed) {
-          d.position({ x: bp.x + (radius + 20), y: bp.y });
-          d.lock();
-        }
-      });
-    });
-  });
-}
-
-function resolveDevCollisions(cy) {
-  const DEV_RADIUS = 28;
-  const BUG_RADIUS = 28;
-
-  const devs = cy.nodes('node[type = "dev"]');
-  const others = cy.nodes(
-    'node[type = "bug"], node[type = "dev"], node[type = "query"]'
-  );
-
-  for (let iter = 0; iter < 8; iter++) {
+  for (let k = 0; k < ITER; k++) {
     let moved = false;
 
-    devs.forEach((d) => {
-      const dp = d.position();
-      let shiftX = 0;
-      let shiftY = 0;
+    commits.forEach((n1, i) => {
+      const p1 = n1.position();
+      commits.forEach((n2, j) => {
+        if (j <= i) return;
+        const p2 = n2.position();
 
-      others.forEach((o) => {
-        if (o.id() === d.id()) return;
-        const op = o.position();
+        const dx = p2.x - p1.x;
+        const dy = p2.y - p1.y;
+        const dist = Math.hypot(dx, dy) || 1;
 
-        const dx = dp.x - op.x;
-        const dy = dp.y - op.y;
-        const dist = Math.max(1, Math.hypot(dx, dy));
-        const minDist =
-          (o.data("type") === "bug" ? BUG_RADIUS : DEV_RADIUS) + DEV_RADIUS + 6;
+        if (dist < MIN_DIST) {
+          const push = (MIN_DIST - dist) / 2;
+          const ux = dx / dist;
+          const uy = dy / dist;
 
-        if (dist < minDist) {
-          // dorong menjauh
-          const push = (minDist - dist) * 0.6;
-          shiftX += (dx / dist) * push;
-          shiftY += (dy / dist) * push;
+          n1.position({ x: p1.x - ux * push, y: p1.y - uy * push });
+          n2.position({ x: p2.x + ux * push, y: p2.y + uy * push });
+          moved = true;
         }
       });
-
-      if (Math.abs(shiftX) > 0.5 || Math.abs(shiftY) > 0.5) {
-        d.position({ x: dp.x + shiftX, y: dp.y + shiftY });
-        d.lock();
-        moved = true;
-      }
     });
 
     if (!moved) break;
@@ -206,147 +232,142 @@ function resolveDevCollisions(cy) {
 }
 
 export default function EasyfixBugGraph({ data }) {
-  const elements = useMemo(() => buildElements(data), [data]);
+  const elements = useMemo(() => buildElements(data || {}), [data]);
   const cyRef = useRef(null);
 
   const layout = {
-    name: "concentric",
-    fit: false,
-    avoidOverlap: true,
-    minNodeSpacing: 60,
-    startAngle: Math.PI / 2,
-    concentric: (node) => {
+    name: "cose",
+    fit: true,
+    padding: 30,
+    animate: true,
+    animationDuration: 600,
+    nodeRepulsion: (node) => {
       const t = node.data("type");
-      if (t === "query") return 3;
-      if (t === "bug") return 2;
-      return 1;
+      if (t === "commit") return 3500; 
+      if (t === "dev") return 2500;
+      if (t === "bug") return 2600;
+      return 2600; // query
     },
-    levelWidth: () => 1,
+    idealEdgeLength: (edge) => {
+      const rel = edge.data("rel");
+      if (rel === "assigned_to") return 70; 
+      if (rel === "fixed_in") return 80; 
+      return 90; 
+    },
+    edgeElasticity: 250,
+    gravity: 40,
   };
 
   const stylesheet = [
-    // Node default
     {
       selector: "node",
       style: {
-        shape: "ellipse",
-        width: 56,
-        height: 56,
+        shape: "ellipse", // circle (width == height)
         "background-color": "#1f2937",
-        "border-width": 3,
+        "border-width": 2,
         "border-color": "#e5e7eb",
+        width: 46,
+        height: 46,
         label: "",
-        "font-size": 11,
+        "font-size": 10,
         color: "#0f172a",
         "text-background-color": "#ffffff",
         "text-background-opacity": 0.95,
-        "text-background-padding": 2,
+        "text-background-padding": 3,
+        "text-wrap": "wrap",
+        "text-max-width": 80,
         "text-halign": "center",
-        "text-wrap": "none",
+        "text-valign": "center",
         "overlay-opacity": 0,
-        "z-index-compare": "auto",
       },
     },
-    // Query (tanpa label)
     {
       selector: 'node[type = "query"]',
       style: {
-        "background-color": "#C58B22",
-        "border-color": "#E8BE72",
-        label: "",
+        "background-color": "#f97316",
+        "border-color": "#fed7aa",
+        width: 54,
+        height: 54,
+        label: "data(title)",
+        "font-weight": "bold",
+        "font-size": 11,
+        color: "#111827",
+        "text-max-width": 120,
       },
     },
-    // Bug: label = ID
     {
       selector: 'node[type = "bug"]',
       style: {
-        "background-color": "#C3249E",
-        "border-color": "#F08FD7",
+        "background-color": "#ec4899",
+        "border-color": "#f9a8d4",
+        width: 50,
+        height: 50,
         label: "data(bug_id)",
+        "font-weight": "bold",
         "text-valign": "bottom",
-        "text-margin-y": 12,
+        "text-margin-y": 8,
       },
     },
-    // Dev
     {
       selector: 'node[type = "dev"]',
       style: {
-        "background-color": "#2E6FD3",
-        "border-color": "#99B9F7",
+        "background-color": "#2563eb",
+        "border-color": "#bfdbfe",
+        width: 48,
+        height: 48,
         label: "data(email)",
+        "font-size": 9,
+        "text-valign": "center",
+      },
+    },
+    {
+      selector: 'node[type = "commit"]',
+      style: {
+        "background-color": "#059669",
+        "border-color": "#6ee7b7",
+        width: 44,
+        height: 44,
+        label: "data(hash)",
+        "font-size": 8,
         "text-valign": "top",
-        "text-margin-y": -12,
-      },
-    },
-
-    // Edge
-    {
-      selector: "edge",
-      style: {
-        "curve-style": "unbundled-bezier",
-        "control-point-step-size": 30,
-        "line-color": "#64748b",
-        "line-opacity": 0.95,
-        "target-arrow-shape": "none",
-        "source-arrow-shape": "none",
-        width: 2.5,
-        "z-index-compare": "auto",
-      },
-    },
-    // Edge query->bug (matches)
-    {
-      selector: 'edge[rel = "matches"]',
-      style: {
-        width: "mapData(weight, 1, 5, 3, 7.5)",
-        "line-color": "#334155",
-      },
-    },
-    // Edge dev->bug (assigned_to)
-    {
-      selector: 'edge[rel = "assigned_to"]',
-      style: {
-        "line-color": "#9333ea",
-        width: 3,
-        "line-opacity": 0.9,
+        "text-margin-y": -8,
       },
     },
     {
       selector: "edge",
       style: {
         "curve-style": "unbundled-bezier",
-        "control-point-step-size": 30,
-        "line-color": "#64748b",
-        "line-opacity": 0.95,
-        "target-arrow-shape": "none",
-        "source-arrow-shape": "none",
-        width: 2.5,
+        "control-point-step-size": 25,
+        "line-color": "#cbd5f5",
+        "line-opacity": 0.9,
+        "target-arrow-shape": "triangle",
+        "target-arrow-color": "#cbd5f5",
+        width: 1.3,
       },
     },
-    // query -> bug
     {
       selector: 'edge[rel = "matches"]',
       style: {
-        width: "mapData(weight, 1, 5, 3, 7.5)",
-        "line-color": "#334155",
+        "line-color": "#64748b",
+        "target-arrow-color": "#64748b",
+        width: "mapData(weight, 1, 5, 1.5, 3.5)",
       },
     },
-    // dev -> bug
     {
       selector: 'edge[rel = "assigned_to"]',
       style: {
-        "line-color": "#9333ea",
-        width: 3,
-        "line-opacity": 0.9,
-      },
-    },
-    // query -> dev
-    {
-      selector: 'edge[rel = "q_dev"]',
-      style: {
-        "line-color": "#0ea5e9", // biru-cyan
+        "line-color": "#a855f7",
+        "target-arrow-color": "#a855f7",
         "line-style": "dashed",
-        width: "mapData(weight, 1, 10, 2, 5)", // opsional: tebal berdasar score/freq
-        "line-opacity": 0.9,
+        width: 2,
+      },
+    },
+    {
+      selector: 'edge[rel = "fixed_in"]',
+      style: {
+        "line-color": "#22c55e",
+        "target-arrow-color": "#22c55e",
+        width: 2,
       },
     },
   ];
@@ -357,22 +378,15 @@ export default function EasyfixBugGraph({ data }) {
         cy={(cy) => {
           cyRef.current = cy;
 
-          cy.nodes('node[type = "dev"]').lock();
           cy.layout(layout).run();
+          separateCommits(cy); // rapikan commit yang terlalu nempel
+          cy.fit(undefined, 30);
 
-          placeDevelopersAroundBugs(cy);
-          resolveDevCollisions(cy);
-
-          // sentris & zoom
-          cy.fit(undefined, 40);
-          cy.center();
-
-    
           cy.on("tap", "node", (evt) => {
             const id = evt.target.id();
             if (id.startsWith("bug:")) {
               const bugNum = id.split(":")[1];
-              window.location.href = `/bugs/${bugNum}`;
+              if (bugNum) window.location.href = `/bugs/${bugNum}`;
             }
           });
         }}
@@ -381,7 +395,7 @@ export default function EasyfixBugGraph({ data }) {
         stylesheet={stylesheet}
         style={{ width: "100%", height: "100%" }}
         wheelSensitivity={0.3}
-        minZoom={0.3}
+        minZoom={0.4}
         maxZoom={3}
       />
     </div>
