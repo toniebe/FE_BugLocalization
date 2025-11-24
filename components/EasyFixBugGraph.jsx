@@ -4,6 +4,7 @@ import React, { useMemo, useRef } from "react";
 import CytoscapeComponent from "react-cytoscapejs";
 import cytoscape from "cytoscape";
 import dagre from "cytoscape-dagre";
+import { useRouter } from "next/navigation";
 
 // register layout sekali di browser
 if (typeof window !== "undefined" && !window.__easyfixDagreRegistered) {
@@ -232,6 +233,7 @@ function separateCommits(cy) {
 }
 
 export default function EasyfixBugGraph({ data }) {
+  const router = useRouter();
   const elements = useMemo(() => buildElements(data || {}), [data]);
   const cyRef = useRef(null);
 
@@ -243,16 +245,16 @@ export default function EasyfixBugGraph({ data }) {
     animationDuration: 600,
     nodeRepulsion: (node) => {
       const t = node.data("type");
-      if (t === "commit") return 3500; 
+      if (t === "commit") return 3500;
       if (t === "dev") return 2500;
       if (t === "bug") return 2600;
       return 2600; // query
     },
     idealEdgeLength: (edge) => {
       const rel = edge.data("rel");
-      if (rel === "assigned_to") return 70; 
-      if (rel === "fixed_in") return 80; 
-      return 90; 
+      if (rel === "assigned_to") return 70;
+      if (rel === "fixed_in") return 80;
+      return 90;
     },
     edgeElasticity: 250,
     gravity: 40,
@@ -379,14 +381,17 @@ export default function EasyfixBugGraph({ data }) {
           cyRef.current = cy;
 
           cy.layout(layout).run();
-          separateCommits(cy); // rapikan commit yang terlalu nempel
+          separateCommits(cy);
           cy.fit(undefined, 30);
 
           cy.on("tap", "node", (evt) => {
             const id = evt.target.id();
             if (id.startsWith("bug:")) {
               const bugNum = id.split(":")[1];
-              if (bugNum) window.location.href = `/bugs/${bugNum}`;
+              if (bugNum) window.open(`/bugs/${bugNum}`, "_blank");
+            } else if (id.startsWith("dev:")) {
+              const devKey = id.split(":")[1];
+              if (devKey) window.open(`/developers/${encodeURIComponent(devKey)}`, "_blank");
             }
           });
         }}

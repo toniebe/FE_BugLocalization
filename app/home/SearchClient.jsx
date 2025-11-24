@@ -182,10 +182,10 @@ export default function SearchClient() {
           <div className="text-sm text-gray-500">Tidak ada hasil.</div>
         ) : (
           <ul className="space-y-3">
-            {data.bugs.map((b) => (
+            {data.bugs.map((b,index) => (
               <li
-                key={b.id}
-                onClick={() => router.push(`/bugs/${b.id}`)}
+                key={`${b.id}-${index}`}
+                onClick={() => router.push(`/bugs/${b.bug_id}`)}
                 className="border rounded-lg p-3 cursor-pointer hover:border-[#0D5DB8] hover:bg-blue-50/40 transition-colors"
               >
                 <div className="font-medium text-sm text-gray-900">

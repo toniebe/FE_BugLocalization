@@ -1,10 +1,9 @@
-// app/api/bugs/[bugId]/route.js
 import { NextResponse } from "next/server";
 import { apiFetch } from "@/app/_lib/fetcher";
 import { cookies } from "next/headers";
 
 export async function GET(req, { params }) {
-  const { bugId } = params;
+  const { devKey } = params;
   const cookieStore = cookies();
   const idToken = cookieStore.get("id_token")?.value;
 
@@ -12,20 +11,21 @@ export async function GET(req, { params }) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
+
   const { searchParams } = new URL(req.url);
   const org = searchParams.get("organization_name") || "";
   const proj = searchParams.get("project_name") || "";
 
   if (!org || !proj) {
     return NextResponse.json(
-      { error: "Missing organization_name or project_name" },
+      { error: "organization_name & project_name are required" },
       { status: 400 }
     );
   }
 
   try {
     const data = await apiFetch(
-      `/api/bug/bugs/${bugId}?organization_name=${encodeURIComponent(
+      `/api/bug/developers/${encodeURIComponent(devKey)}?organization_name=${encodeURIComponent(
         org
       )}&project_name=${encodeURIComponent(proj)}`,
       {
@@ -38,10 +38,10 @@ export async function GET(req, { params }) {
 
     return NextResponse.json(data);
   } catch (err) {
-    console.error("Bug detail error:", err);
+    console.error("Developer detail error:", err);
 
     const status = err?.status || 500;
-    const msg = err?.message || "Failed to fetch bug detail";
+    const msg = err?.message || "Failed to fetch developer detail";
 
     return NextResponse.json({ error: msg }, { status });
   }
