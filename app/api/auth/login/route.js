@@ -1,7 +1,6 @@
 import { apiFetch } from "@/app/_lib/fetcher";
 import { NextResponse } from "next/server";
 
-
 export async function POST(req) {
   try {
     const body = await req.json();
@@ -11,8 +10,6 @@ export async function POST(req) {
       body: JSON.stringify(body),
     });
 
-   
-
     const res = NextResponse.json({
       ok: true,
       uid: data.local_id ?? data.uid,
@@ -21,16 +18,17 @@ export async function POST(req) {
       project_name: data.project_name ?? null,
     });
 
-    const maxAge = data.expires_in
-      ? parseInt(data.expires_in, 10)
-      : 3600;
+    const maxAge = data.expires_in ? parseInt(data.expires_in, 10) : 3600;
 
-    const isProd = process.env.NODE_ENV === "production";
+    const cookieSecure =
+      process.env.COOKIE_SECURE === "true" ||
+      (process.env.NODE_ENV === "production" &&
+        process.env.FORCE_HTTPS === "true");
 
     const cookieOpts = {
       httpOnly: true,
       sameSite: "lax",
-      secure: isProd,
+      secure: cookieSecure,
       path: "/",
       maxAge,
     };
@@ -38,10 +36,14 @@ export async function POST(req) {
     res.cookies.set("id_token", data.id_token ?? data.idToken, cookieOpts);
 
     if (data.refresh_token ?? data.refreshToken) {
-      res.cookies.set("refresh_token", data.refresh_token ?? data.refreshToken, {
-        ...cookieOpts,
-        maxAge: 60 * 60 * 24 * 30, 
-      });
+      res.cookies.set(
+        "refresh_token",
+        data.refresh_token ?? data.refreshToken,
+        {
+          ...cookieOpts,
+          maxAge: 60 * 60 * 24 * 30,
+        }
+      );
     }
 
     if (data.organization_name) {
