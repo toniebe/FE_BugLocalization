@@ -8,6 +8,8 @@ function Header() {
   const handleLogout = async () => {
     try {
       await logout();
+      localStorage.removeItem("organization_name");
+      localStorage.removeItem("project_name");
     } catch (e) {
       console.error("Logout error", e);
     } finally {

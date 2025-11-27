@@ -30,6 +30,8 @@ export default function NewBugPage() {
     e.preventDefault();
     setErr("");
     setLoading(true);
+    const orgName = localStorage.getItem("organization_name");
+    const projectName = localStorage.getItem("project_name");
 
     if (!orgName || !projectName) {
       setErr(
