@@ -16,9 +16,18 @@ export async function POST(req) {
       email: data.email,
       organization_name: data.organization_name ?? null,
       project_name: data.project_name ?? null,
+
+      // >>> tambahkan ini:
+      id_token: data.id_token ?? data.idToken,
+      refresh_token: data.refresh_token ?? data.refreshToken,
+      expires_in: data.expires_in ?? data.expiresIn,
     });
 
-    const maxAge = data.expires_in ? parseInt(data.expires_in, 10) : 3600;
+    const maxAge = data.expires_in
+      ? parseInt(data.expires_in, 10)
+      : data.expiresIn
+      ? parseInt(data.expiresIn, 10)
+      : 3600;
 
     const cookieSecure =
       process.env.COOKIE_SECURE === "true" ||
@@ -33,6 +42,7 @@ export async function POST(req) {
       maxAge,
     };
 
+    // tetap set cookie seperti biasa
     res.cookies.set("id_token", data.id_token ?? data.idToken, cookieOpts);
 
     if (data.refresh_token ?? data.refreshToken) {
@@ -66,3 +76,4 @@ export async function POST(req) {
     );
   }
 }
+
