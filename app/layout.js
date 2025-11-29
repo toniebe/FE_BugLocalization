@@ -20,17 +20,42 @@ export const metadata = {
   description:
     "EasyFix adalah AI bug resolution & bug localization assistant untuk developer. Temukan solusi bug lebih cepat dari Bugzilla, GitHub, dan repository kode Anda.",
   keywords: [
-    "easyfix",
-    "easyfix bug resulution",
-    "AI bug assistant",
-    "AI bug localization",
-    "bug tracking",
-    "easyfix AI",
-    "bug resolution",
-    "bug localization",
+    // Brand & umum
+    "EasyFix",
+    "EasyFix cloud",
+    "EasyFix app",
+    "EasyFix bug resolution",
+    "EasyFix bug localization",
+    "aplikasi EasyFix",
+
+    // ITB & tugas kuliah
+    "EasyFix ITB",
+    "aplikasi bug resolusi ITB",
+    "aplikasi bug resolution ITB",
+    "aplikasi bug localization ITB",
+    "aplikasi bug untuk tugas kuliah ITB",
+    "EasyFix kelompok 3 ITB",
+    "proyek kelompok 3 ITB EasyFix",
+    "aplikasi tugas kuliah informatika ITB",
+    "aplikasi tugas kuliah teknik informatika ITB",
+
+    // Fungsi produk
+    "aplikasi bug resolution",
+    "aplikasi bug resolusi",
+    "aplikasi bug localization",
+    "alat debugging untuk developer",
+    "alat debugging untuk mahasiswa",
+    "bug resolution assistant",
+    "bug localization assistant",
     "AI bug resolution",
+    "AI bug localization",
+
+    // Teknis / niche
     "bug knowledge graph",
-    "developer tools",
+    "bug knowledge graph EasyFix",
+    "Neo4j bug graph",
+    "aplikasi analisis bug",
+    "tool pencari solusi bug",
   ],
   openGraph: {
     title: "EasyFix – AI Bug Resolution & Bug Localization Assistant",
