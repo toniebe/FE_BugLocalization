@@ -1,17 +1,3 @@
-name: Deploy FE to EasyFix Droplet
-
-on:
-  push:
-    branches: ["main"]
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -20,19 +6,22 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT || 22 }}
           script: |
+            # Pastikan Node & npm & pm2 kebaca
+            export PATH="/root/.nvm/versions/node/v24.11.1/bin:$PATH"
+
             cd /var/www/easyfix-fe/FE_BugLocalization
 
             echo "Pull latest code..."
             git pull origin main
 
             echo "Install deps..."
-            /root/.nvm/versions/node/v24.11.1/bin/npm install
+            npm install
 
             echo "Build Next.js..."
-            /root/.nvm/versions/node/v24.11.1/bin/npm run build
+            npm run build
 
             echo "Restart FE with PM2..."
-            /root/.nvm/versions/node/v24.11.1/bin/pm2 restart easyfix-fe || \
-              /root/.nvm/versions/node/v24.11.1/bin/pm2 start npm --name "easyfix-fe" -- run start -- -p 3000
+            pm2 restart easyfix-fe || \
+              pm2 start npm --name "easyfix-fe" -- run start -- -p 3000
 
-            /root/.nvm/versions/node/v24.11.1/bin/pm2 save
+            pm2 save
