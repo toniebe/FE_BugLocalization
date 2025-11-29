@@ -72,14 +72,6 @@ export default function DeveloperDetailClient({ params }) {
       <section className="max-w-4xl mx-auto mt-6 p-6 bg-white rounded-lg border border-gray-200">
         {/* Header + Back button */}
         <div className="flex items-center justify-between mb-4 gap-3">
-          <button
-            type="button"
-            onClick={handleBack}
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border border-gray-300 text-sm text-gray-700 hover:bg-gray-50 active:scale-[0.99] transition"
-          >
-            <span className="text-lg leading-none">←</span>
-            <span>Back</span>
-          </button>
 
           <h1 className="text-xl font-semibold truncate">
             Developer Detail: {devKey}
