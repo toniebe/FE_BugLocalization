@@ -26,12 +26,13 @@ jobs:
             git pull origin main
 
             echo "Install deps..."
-            npm install
+            /root/.nvm/versions/node/v24.11.1/bin/npm install
 
             echo "Build Next.js..."
-            npm run build
+            /root/.nvm/versions/node/v24.11.1/bin/npm run build
 
             echo "Restart FE with PM2..."
-            pm2 restart easyfix-fe || pm2 start npm --name "easyfix-fe" -- run start -- -p 3000
+            /root/.nvm/versions/node/v24.11.1/bin/pm2 restart easyfix-fe || \
+              /root/.nvm/versions/node/v24.11.1/bin/pm2 start npm --name "easyfix-fe" -- run start -- -p 3000
 
-            pm2 save
+            /root/.nvm/versions/node/v24.11.1/bin/pm2 save
