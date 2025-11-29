@@ -26,10 +26,10 @@ export default function Home() {
 
           <div className="hidden md:flex items-center gap-6">
             <Link
-              href="#pricing"
+              href="#Feature"
               className="text-sm font-medium text-[#01559A] hover:opacity-80"
             >
-              Pricing
+              Features
             </Link>
             <Link
               href="#about"
@@ -86,10 +86,10 @@ export default function Home() {
           <div className="md:hidden border-t border-gray-100">
             <div className="px-4 sm:px-6 py-3 flex flex-col gap-3">
               <Link
-                href="#pricing"
+                href="#Feature"
                 className="text-sm font-medium text-[#01559A]"
               >
-                Pricing
+                Features
               </Link>
               <Link
                 href="#about"
@@ -116,22 +116,22 @@ export default function Home() {
       </header>
 
       <main className="flex-1">
+        {/* HERO */}
         <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-10 pb-16 md:pt-14 md:pb-24 grid gap-10 items-center">
           <div className="text-center ">
             <h1 className="font-extrabold tracking-tight text-[#01559A] text-3xl sm:text-4xl md:text-5xl leading-tight">
-              Percepat debugging dengan bug
+              Accelerate debugging with
               <br className="hidden md:block" />
               <span className="md:whitespace-nowrap">
                 {" "}
-                resolution berbasis AI
+                AI-powered bug resolution
               </span>
             </h1>
             <p className="mt-4 text-base sm:text-lg md:text-xl text-gray-700">
-              Belajar mengetik dua kali lebih cepat hanya akan mempercepat waktu
-              pengembangan keseluruhan beberapa persen saja. Jadi, jika ingin
-              mempercepat proses pengembangan perangkat lunak hingga selesai,
-              fokuslah pada upaya mengurangi waktu yang dihabiskan untuk
-              debugging.
+              Learning to type twice as fast will only speed up overall
+              development time by a few percent. If you really want to
+              accelerate software development, focus on reducing the time spent
+              on debugging.
             </p>
             <div className="mt-6 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
               <Link
@@ -143,14 +143,16 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        {/* FEATURES */}
         <section
-          id="pricing"
+          id="Feature"
           className="bg-[#01559A] px-4 sm:px-6 lg:px-8 pt-8 pb-16 md:pt-10 md:pb-24"
         >
           {/* Headline row */}
           <div className="grid grid-cols-1 md:grid-cols-2 items-center mb-8 md:mb-12">
             <h2 className="text-3xl md:text-4xl font-extrabold text-white">
-              Pricing
+              Features
             </h2>
             <h3 className="text-lg md:text-xl font-normal text-white/95 md:text-right mt-2 md:mt-0">
               Simple, Transparent, Flexible
@@ -159,46 +161,47 @@ export default function Home() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-10 items-stretch">
             <PriceCard
-              packageName="Pro"
-              price={22}
-              billingCycle="User"
-              subtitle="for small dev"
+              packageName="Relevant Information"
+              price={null}
+              billingCycle=""
+              subtitle="Bug, code, and developer context in one place."
               features={[
-                "1-50 Users",
-                "no limit transactions",
-                "unlimited query search",
+                "Concise and clear bug descriptions.",
+                "History of code changes and related commits.",
+                "Developers relevant to the same code areas.",
               ]}
               className="mx-auto w-full max-w-sm"
             />
 
             <PriceCard
-              isPopular
-              packageName="Team"
-              price={12}
-              billingCycle="User"
-              subtitle="For medium team"
+              packageName="Visualization Dashboard"
+              price={null}
+              billingCycle=""
+              subtitle="Interactive knowledge graph to understand bug–code–developer relationships."
               features={[
-                "50-150 Users",
-                "no limit transactions",
-                "unlimited query search",
+                "Visualize relationships between bugs ↔ code ↔ commits ↔ developers.",
+                "Quickly see patterns, dependencies, and bug context.",
+                "Interactive visual view for team exploration.",
               ]}
               className="mx-auto w-full max-w-md md:translate-y-[-6px]"
             />
 
             <PriceCard
-              packageName="Enterprise"
-              price={10}
-              billingCycle="User"
-              subtitle="For Large Team"
+              packageName="Developer Recommendation"
+              price={null}
+              billingCycle=""
+              subtitle="Suggests the most relevant developers to handle each bug."
               features={[
-                "> 150 Users",
-                "no limit transactions",
-                "unlimited query search",
+                "Recommendations based on code contribution and commit history.",
+                "Takes into account expertise and frequently worked-on modules.",
+                "Speeds up assigning bugs to the right developer.",
               ]}
               className="mx-auto w-full max-w-sm"
             />
           </div>
         </section>
+
+        {/* ABOUT */}
         <section
           id="about"
           className="grid grid-cols-1 md:grid-cols-2 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-10 pb-16 md:pt-14 md:pb-24"
@@ -207,36 +210,36 @@ export default function Home() {
             <img
               src="banner-landing.jpg"
               alt="About EasyFix"
-    
               className="object-contain w-full h-auto"
             />
           </div>
           <div className="ml-8 max-w-3xl ">
             <div>
               <h2 className="font-bold tracking-tight text-[#01559A] text-2xl sm:text-4xl md:text-5xl leading-tight">
-                Tentang Kami
+                About Us
               </h2>
               <p className="mt-4 text-base sm:text-lg md:text-xl text-gray-700">
-                <span className="text-[#01559A] font-bold">EASYFIX</span> adalah
-                solusi bug resolution berbasis AI yang mengintegrasikan Machine
-                Learning, dan Knowledge Graph untuk membantu developer menemukan
-                informasi bug yang relevan, sehingga proses perbaikan bug dapat
-                dilakukan dengan lebih cepat.​ Melalui dashboard interaktif,
-                EASYFIX menampilkan graf visual dan informasi terkait bug,
-                commit, serta developer yang berhubungan. Dengan memangkas waktu
-                debugging, EASYFIX membantu organisasi menekan biaya,
-                meningkatkan produktivitas, dan mempercepat siklus rilis
-                perangkat lunak berkualitas tinggi.
+                <span className="text-[#01559A] font-bold">EASYFIX</span> is an
+                AI-powered bug resolution solution that integrates Machine
+                Learning and Knowledge Graphs to help developers discover
+                relevant bug information, so that bug fixing can be done much
+                faster. Through an interactive dashboard, EASYFIX presents
+                visual graphs and information related to bugs, commits, and the
+                developers involved. By cutting down debugging time, EASYFIX
+                helps organizations reduce costs, increase productivity, and
+                accelerate the release cycle of high-quality software.
               </p>
             </div>
-            <div>
+            <div className="mt-8">
               <h2 className="font-bold tracking-tight text-[#01559A] text-2xl sm:text-4xl md:text-5xl leading-tight">
-                Hubungi Kami
+                Contact Us
               </h2>
               <p className="mt-4 text-base sm:text-lg md:text-xl text-gray-700">
-                23524302@mahasiswa.itb.ac.id​ <br /> 
-                23524304@mahasiswa.itb.ac.id​ <br />
-                23524319@mahasiswa.itb.ac.id​
+                23524302@mahasiswa.itb.ac.id
+                <br />
+                23524304@mahasiswa.itb.ac.id
+                <br />
+                23524319@mahasiswa.itb.ac.id
               </p>
             </div>
           </div>

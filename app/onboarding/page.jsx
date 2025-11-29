@@ -45,7 +45,8 @@ export default function OnboardingPage() {
       if (!data.ok) {
         throw new Error(data.error || "Failed to create project");
       }
-
+      localStorage.setItem("organization_name", orgName.trim());
+      localStorage.setItem("project_name", projectName.trim());
       setStep(2);
     } catch (err) {
       console.error(err);

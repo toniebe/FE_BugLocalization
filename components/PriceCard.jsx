@@ -1,60 +1,56 @@
 import React from "react";
 
-
-
 function PriceCard({
-  packageName = "Pro",
+  packageName = "Fitur",
   subtitle,
-  price = 29,
+  price = null,
   billingCycle = "User",
-  features = ["1-50 Users", "No limit transactions", "Unlimited query search"],
-  isPopular = false,
-  priceAtBottom = false,
+  features = [],
   className = "",
 }) {
+  const showPrice = typeof price === "number";
+
   const boxBase =
-    "flex flex-col rounded-xl shadow-lg border transition-all duration-200";
-  const boxTone = isPopular
-    ? "bg-[#1767A9] text-white border-white/10"
-    : "bg-white text-black border-gray-200";
-
-
-  const boxSize = isPopular
-    ? "p-8 md:p-10 min-h-[380px] md:min-h-[420px] scale-[1.02] md:scale-105"
-    : "p-6 md:p-7 min-h-[320px]";
+    "flex flex-col bg-white rounded-2xl shadow-lg border border-slate-200 p-6 md:p-8 h-full";
 
   return (
-    <div className={[boxBase, boxTone, boxSize, className].join(" ")}>
-      <h2 className={`font-bold ${isPopular ? "text-white/95" : "text-black"} text-sm`}>
+    <div className={`${boxBase} ${className}`}>
+      {/* Judul fitur / paket */}
+      <h3 className="text-sm font-semibold text-sky-700 tracking-wide uppercase">
         {packageName}
-      </h2>
+      </h3>
 
-
-      
-        <p className={`mt-3 mb-4 font-extrabold ${isPopular ? "text-white" : "text-black"} text-3xl`}>
-          ${price} <span className={`${isPopular ? "text-white/90" : "text-black/70"} text-base font-semibold`}>/ {billingCycle}</span>
+      {/* Harga (opsional, kalau nanti mau dipakai lagi) */}
+      {showPrice && (
+        <p className="mt-3 mb-3 text-3xl font-bold text-slate-900">
+          ${price}
+          {billingCycle && (
+            <span className="text-base font-medium text-slate-500">
+              {" "}
+              / {billingCycle}
+            </span>
+          )}
         </p>
-      
+      )}
 
+      {/* Deskripsi singkat */}
       {subtitle && (
-        <p className={`${isPopular ? "text-white/90" : "text-gray-600"} text-sm mb-3`}>
+        <p className="text-sm text-slate-600 mb-4 leading-relaxed">
           {subtitle}
         </p>
       )}
 
-
-      <ul
-        className={[
-          "list-disc pl-5 space-y-2 mb-4",
-          isPopular ? "text-white/95 marker:text-white/80" : "text-gray-700 marker:text-gray-400",
-        ].join(" ")}
-      >
-        {features.map((f, i) => (
-          <li key={i}>{f}</li>
-        ))}
-      </ul>
-
-     
+      {/* List fitur */}
+      {features && features.length > 0 && (
+        <ul className="mt-auto space-y-2 text-sm text-slate-700">
+          {features.map((feature, idx) => (
+            <li key={idx} className="flex items-start gap-2">
+              <span className="mt-1 h-1.5 w-1.5 rounded-full bg-sky-600" />
+              <span>{feature}</span>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
