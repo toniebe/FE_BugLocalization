@@ -3,9 +3,6 @@ name: Deploy FE to EasyFix Droplet
 on:
   push:
     branches: ["main"]
-    # optional: hanya kalau ada perubahan di folder FE
-    # paths:
-    #   - "FE_BugLocalization/**"
 
 jobs:
   deploy:
