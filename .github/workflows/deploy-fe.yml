@@ -1,0 +1,40 @@
+name: Deploy FE to EasyFix Droplet
+
+on:
+  push:
+    branches: ["main"]
+    # optional: hanya kalau ada perubahan di folder FE
+    # paths:
+    #   - "FE_BugLocalization/**"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script: |
+            cd /var/www/easyfix-fe/FE_BugLocalization
+
+            echo "Pull latest code..."
+            git pull origin main
+
+            echo "Install deps..."
+            npm install
+
+            echo "Build Next.js..."
+            npm run build
+
+            echo "Restart FE with PM2..."
+            pm2 restart easyfix-fe || pm2 start npm --name "easyfix-fe" -- run start -- -p 3000
+
+            pm2 save
