@@ -3,6 +3,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import PriceCard from "@/components/PriceCard";
+import Chatbot from "@/components/Chatbot";
 
 export default function Home() {
   const [open, setOpen] = useState(false);
@@ -262,6 +263,9 @@ export default function Home() {
           </div>
         </div>
       </footer>
+      <main className="min-h-screen relative">
+                <Chatbot />
+              </main>
     </div>
   );
 }
