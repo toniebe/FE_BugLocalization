@@ -8,7 +8,7 @@ export default function DeveloperRecommendationPage() {
   const [organization, setOrganization] = useState("");
   const [project, setProject] = useState("");
 
-  // mode pencarian: by Bug ID atau Summary
+  // search mode: by Bug ID or Summary
   const [mode, setMode] = useState("id"); // "id" | "summary"
 
   const [bugId, setBugId] = useState("");
@@ -24,7 +24,7 @@ export default function DeveloperRecommendationPage() {
 
   const [error, setError] = useState("");
 
-  // Ambil organization & project dari localStorage saat client mount
+  // Get organization & project from localStorage on client mount
   useEffect(() => {
     if (typeof window !== "undefined") {
       const org = localStorage.getItem("organization_name") || "";
@@ -40,7 +40,7 @@ export default function DeveloperRecommendationPage() {
 
     if (!organization || !project) {
       setError(
-        "Organization dan Project belum tersedia (cek localStorage / onboarding)."
+        "Organization and Project are not available (check localStorage / onboarding)."
       );
       return;
     }
@@ -65,7 +65,7 @@ export default function DeveloperRecommendationPage() {
       setTrainResult(json);
     } catch (err) {
       console.error("Train error:", err);
-      setError(err.message || "Gagal melatih model LTR");
+      setError(err.message || "Failed to train LTR model");
     } finally {
       setLoadingTrain(false);
     }
@@ -77,17 +77,17 @@ export default function DeveloperRecommendationPage() {
     setRecMeta(null);
 
     if (!organization || !project) {
-      setError("Organization dan Project belum tersedia.");
+      setError("Organization and Project are not available.");
       return;
     }
 
     if (mode === "id" && !bugId) {
-      setError("Bug ID harus diisi dulu.");
+      setError("Bug ID is required.");
       return;
     }
 
     if (mode === "summary" && !summary.trim()) {
-      setError("Summary bug harus diisi dulu.");
+      setError("Bug summary is required.");
       return;
     }
 
@@ -126,7 +126,7 @@ export default function DeveloperRecommendationPage() {
       }
 
       const json = await res.json();
-      console.log("LTR RESPONSE:", json); 
+      console.log("LTR RESPONSE:", json);
       if (!res.ok || json?.error || json?.detail) {
         throw new Error(
           json.error || json.detail || "Failed to get recommendations"
@@ -135,10 +135,9 @@ export default function DeveloperRecommendationPage() {
 
       setRecommendations(json.recommended_developers || []);
       setRecMeta(json);
-
     } catch (err) {
       console.error("Recommend error:", err);
-      setError(err.message || "Gagal mengambil rekomendasi developer");
+      setError(err.message || "Failed to fetch developer recommendations");
     } finally {
       setLoadingRecommend(false);
     }
@@ -153,13 +152,13 @@ export default function DeveloperRecommendationPage() {
               Developer Recommendation (Learning-to-Rank)
             </h1>
             <p className="text-gray-700">
-              Halaman ini menggunakan model Learning-to-Rank untuk
-              merekomendasikan developer berdasarkan data bug di EasyFix. Kamu
-              bisa mencari berdasarkan <b>Bug ID</b> atau <b>Summary bug</b>.
+              This page uses a Learning-to-Rank model to recommend developers
+              based on bug data in EasyFix. You can search by <b>Bug ID</b> or{" "}
+              <b>Bug Summary</b>.
             </p>
           </header>
 
-          {/* Info Organization & Project */}
+          {/* Organization & Project Info */}
           <section className="border rounded-lg p-4 bg-gray-50 space-y-2">
             <h2 className="text-lg font-semibold text-[#01559A]">
               Project Context
@@ -167,33 +166,34 @@ export default function DeveloperRecommendationPage() {
             <div className="grid gap-3 md:grid-cols-2">
               <div>
                 <label className="block text-sm text-gray-600 mb-1">
-                  Organization (dari localStorage)
+                  Organization (from localStorage)
                 </label>
                 <input
                   type="text"
                   className="w-full border rounded px-3 py-2 text-sm"
                   value={organization}
                   onChange={(e) => setOrganization(e.target.value)}
-                  placeholder="contoh: jho"
+                  placeholder="e.g. jho"
                 />
               </div>
               <div>
                 <label className="block text-sm text-gray-600 mb-1">
-                  Project (dari localStorage)
+                  Project (from localStorage)
                 </label>
                 <input
                   type="text"
                   className="w-full border rounded px-3 py-2 text-sm"
                   value={project}
                   onChange={(e) => setProject(e.target.value)}
-                  placeholder="contoh: cam"
+                  placeholder="e.g. cam"
                 />
               </div>
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              Nilai ini otomatis diambil dari <code>localStorage</code> jika
-              tersedia (<code>organization_name</code> &amp;{" "}
-              <code>project_name</code>), tapi masih bisa diedit manual.
+              These values are automatically loaded from{" "}
+              <code>localStorage</code> if available (
+              <code>organization_name</code> &amp;{" "}
+              <code>project_name</code>), but can still be edited manually.
             </p>
           </section>
 
@@ -216,11 +216,10 @@ export default function DeveloperRecommendationPage() {
               </button>
             </div>
             <p className="text-sm text-gray-700">
-              Tombol ini akan memanggil endpoint:
+              This button will call the endpoint:
               <br />
               <code className="text-xs bg-gray-100 px-2 py-1 rounded">
-                POST
-                /api/ltr/&lt;org&gt;/&lt;project&gt;/train?force_retrain=false
+                POST /api/ltr/&lt;org&gt;/&lt;project&gt;/train?force_retrain=false
               </code>
             </p>
 
@@ -267,7 +266,7 @@ export default function DeveloperRecommendationPage() {
               </div>
             </div>
 
-            {/* Input berdasarkan mode */}
+            {/* Inputs based on mode */}
             {mode === "id" ? (
               <div className="grid gap-3 md:grid-cols-3">
                 <div className="md:col-span-2">
@@ -279,7 +278,7 @@ export default function DeveloperRecommendationPage() {
                     className="w-full border rounded px-3 py-2 text-sm"
                     value={bugId}
                     onChange={(e) => setBugId(e.target.value)}
-                    placeholder="contoh: 1873153"
+                    placeholder="e.g. 1873153"
                   />
                 </div>
                 <div>
@@ -307,12 +306,12 @@ export default function DeveloperRecommendationPage() {
                     rows={4}
                     value={summary}
                     onChange={(e) => setSummary(e.target.value)}
-                    placeholder="Contoh: DevTools inspector tidak menampilkan teks ketika mengedit DOM pada Firefox Nightly..."
+                    placeholder="Example: DevTools inspector does not show text when editing DOM in Firefox Nightly..."
                   />
                   <p className="mt-1 text-xs text-gray-500">
-                    Summary akan dipakai untuk mencari topic yang relevan lalu
-                    merekomendasikan developer. Field <code>component</code>{" "}
-                    dari FE otomatis dikirim kosong.
+                    The summary will be used to find a relevant topic and then
+                    recommend developers. The <code>component</code> field from
+                    FE is automatically sent as empty.
                   </p>
                 </div>
                 <div className="max-w-xs">
@@ -343,7 +342,7 @@ export default function DeveloperRecommendationPage() {
               {loadingRecommend ? "Fetching..." : "Get Recommendations"}
             </button>
 
-            {/* Meta summary dari backend */}
+            {/* Meta summary from backend */}
             {recMeta && (
               <div className="mt-3 text-xs text-gray-700 space-y-1">
                 <div>
@@ -365,7 +364,7 @@ export default function DeveloperRecommendationPage() {
               </div>
             )}
 
-            {/* Tabel rekomendasi */}
+            {/* Recommendation table */}
             {recommendations.length > 0 && (
               <div className="mt-4 overflow-x-auto">
                 <table className="min-w-full text-sm border border-gray-200">
@@ -425,10 +424,10 @@ export default function DeveloperRecommendationPage() {
               </div>
             )}
 
-            {/* Kalau belum ada hasil tapi sudah request, bisa tambahkan info */}
+            {/* No result state */}
             {!loadingRecommend && recMeta && recommendations.length === 0 && (
               <p className="mt-3 text-sm text-gray-600">
-                Tidak ada developer yang direkomendasikan untuk query ini.
+                No developers were recommended for this query.
               </p>
             )}
           </section>

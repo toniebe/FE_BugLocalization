@@ -35,7 +35,7 @@ export default function NewBugPage() {
 
     if (!orgName || !projectName) {
       setErr(
-        "Organization & Project belum di-set. Pastikan sudah selesai onboarding / pilih project."
+        "Organization & Project are not set. Make sure you’ve completed onboarding / selected a project."
       );
       setLoading(false);
       return;
@@ -118,13 +118,12 @@ export default function NewBugPage() {
       router.refresh();
     } catch (e) {
       console.error(e);
-      setErr(e.message || "Gagal menyimpan bug");
+      setErr(e.message || "Failed to save bug");
     } finally {
       setLoading(false);
     }
   }
 
-  // Render form
   const renderForm = () => {
     return (
       <form
@@ -135,8 +134,8 @@ export default function NewBugPage() {
         <div className="space-y-3">
           <h2 className="text-sm font-semibold text-gray-900">Bug Summary</h2>
           <p className="text-xs text-gray-500">
-            Ringkas namun jelas. Gunakan satu kalimat yang menggambarkan inti
-            masalah.
+            Keep it short but clear. Use one sentence that captures the core
+            problem.
           </p>
 
           <div className="space-y-1">
@@ -152,7 +151,7 @@ export default function NewBugPage() {
               placeholder='e.g. Password prompt shows "rememberPassword" instead of "Use Password Manager to remember this password."'
             />
             <p className="text-xs text-gray-500">
-              Contoh: <code>Password prompt shows "rememberPassword"…</code>
+              Example: <code>Password prompt shows "rememberPassword"…</code>
             </p>
           </div>
         </div>
@@ -165,8 +164,8 @@ export default function NewBugPage() {
               Status & Resolution
             </h2>
             <p className="text-xs text-gray-500">
-              Tentukan status lifecycle bug dan resolusinya (jika sudah
-              diketahui).
+              Define the bug lifecycle status and its resolution (if already
+              known).
             </p>
 
             <div className="space-y-1">
@@ -185,8 +184,8 @@ export default function NewBugPage() {
                 <option>REOPENED</option>
               </select>
               <p className="text-xs text-gray-500">
-                <span className="font-medium">NEW</span> untuk bug yang baru
-                dibuat dan belum diproses.
+                <span className="font-medium">NEW</span> for newly created bugs
+                that haven’t been processed yet.
               </p>
             </div>
 
@@ -198,10 +197,10 @@ export default function NewBugPage() {
                 className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D5DB8]/60 focus:border-[#0D5DB8]/70"
                 value={resolution}
                 onChange={(e) => setResolution(e.target.value)}
-                placeholder="FIXED, WONTFIX, DUPLICATE, dll (optional)"
+                placeholder="FIXED, WONTFIX, DUPLICATE, etc. (optional)"
               />
               <p className="text-xs text-gray-500">
-                Kosongkan jika bug belum di-resolve.
+                Leave empty if the bug is not resolved yet.
               </p>
             </div>
           </div>
@@ -212,7 +211,7 @@ export default function NewBugPage() {
               Product & Component
             </h2>
             <p className="text-xs text-gray-500">
-              Menentukan konteks aplikasi dan modul tempat bug terjadi.
+              Defines the app context and the module where the bug happens.
             </p>
 
             <div className="space-y-1">
@@ -226,7 +225,7 @@ export default function NewBugPage() {
                 placeholder="Thunderbird"
               />
               <p className="text-xs text-gray-500">
-                Nama aplikasi / produk utama, misalnya <code>Thunderbird</code>.
+                Main application / product name, e.g. <code>Thunderbird</code>.
               </p>
             </div>
 
@@ -241,7 +240,7 @@ export default function NewBugPage() {
                 placeholder="General"
               />
               <p className="text-xs text-gray-500">
-                Modul / bagian spesifik dalam produk, contoh:{" "}
+                Specific module / part within the product, e.g.{" "}
                 <code>General</code>, <code>UI</code>, <code>Storage</code>.
               </p>
             </div>
@@ -253,7 +252,8 @@ export default function NewBugPage() {
           <div className="space-y-3">
             <h2 className="text-sm font-semibold text-gray-900">Reporter</h2>
             <p className="text-xs text-gray-500">
-              Informasi pembuat bug report untuk keperluan follow-up.
+              Information about who created the bug report for follow-up
+              purposes.
             </p>
 
             <div className="space-y-1">
@@ -267,7 +267,7 @@ export default function NewBugPage() {
                 placeholder="kevin@kevinlocke.name"
               />
               <p className="text-xs text-gray-500">
-                Email atau identifier pengguna yang melaporkan bug.
+                Email or identifier of the user who reported the bug.
               </p>
             </div>
           </div>
@@ -275,7 +275,7 @@ export default function NewBugPage() {
           <div className="space-y-3">
             <h2 className="text-sm font-semibold text-gray-900">Assignee</h2>
             <p className="text-xs text-gray-500">
-              Developer atau owner yang bertanggung jawab terhadap bug ini.
+              Developer or owner responsible for this bug.
             </p>
 
             <div className="space-y-1">
@@ -289,7 +289,7 @@ export default function NewBugPage() {
                 placeholder="mkmelin+mozilla@iki.fi"
               />
               <p className="text-xs text-gray-500">
-                Bisa berupa email, username Git, atau ID internal developer.
+                Can be an email, Git username, or internal developer ID.
               </p>
             </div>
           </div>
@@ -308,8 +308,7 @@ export default function NewBugPage() {
               placeholder="https://…"
             />
             <p className="text-xs text-gray-500">
-              Link terkait bug, misalnya halaman reproduksi, dokumentasi, atau
-              issue lain.
+              Related link, e.g. reproduction page, docs, or another issue.
             </p>
           </div>
 
@@ -324,8 +323,8 @@ export default function NewBugPage() {
               placeholder="perf, regression, crash"
             />
             <p className="mt-1 text-xs text-gray-500">
-              Contoh: <code>perf, regression, crash</code>. Membantu pencarian
-              bug serupa di EasyFix-BKG.
+              Example: <code>perf, regression, crash</code>. Helps search for
+              similar bugs in EasyFix-BKG.
             </p>
           </div>
         </div>
@@ -343,7 +342,7 @@ export default function NewBugPage() {
               placeholder="1872001, 1872002"
             />
             <p className="text-xs text-gray-500">
-              ID bug lain yang harus diselesaikan terlebih dahulu.
+              IDs of other bugs that must be resolved first.
             </p>
           </div>
 
@@ -358,7 +357,8 @@ export default function NewBugPage() {
               placeholder="1872550"
             />
             <p className="text-xs text-gray-500">
-              Jika bug ini duplikasi dari bug lain, isi ID bug aslinya.
+              If this bug is a duplicate of another, fill in the original bug
+              ID.
             </p>
           </div>
         </div>
@@ -367,7 +367,7 @@ export default function NewBugPage() {
         <div className="space-y-4">
           <div className="space-y-1">
             <label className="block text-sm font-medium text-gray-700">
-              Commit Messages (satu per baris)
+              Commit Messages (one per line)
             </label>
             <textarea
               className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D5DB8]/60 focus:border-[#0D5DB8]/70"
@@ -377,14 +377,14 @@ export default function NewBugPage() {
               placeholder={`Password prompt shows "..." r=#thunderbird-reviewers\nPassword prompt shows "..." r=leftmostcat`}
             />
             <p className="text-xs text-gray-500">
-              Satu commit message per baris untuk menghubungkan bug dengan
-              riwayat perubahan kode.
+              One commit message per line to link the bug with code change
+              history.
             </p>
           </div>
 
           <div className="space-y-1">
             <label className="block text-sm font-medium text-gray-700">
-              Commit Refs (satu per baris / dipisah spasi)
+              Commit Refs (one per line / space-separated)
             </label>
             <textarea
               className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D5DB8]/60 focus:border-[#0D5DB8]/70"
@@ -394,14 +394,13 @@ export default function NewBugPage() {
               placeholder="https://hg.mozilla.org/comm-central/rev/d5ccf2809341"
             />
             <p className="text-xs text-gray-500">
-              Bisa berupa URL repo, hash commit, atau ref lain terkait
-              perubahan.
+              Can be repository URLs, commit hashes, or other related refs.
             </p>
           </div>
 
           <div className="space-y-1">
             <label className="block text-sm font-medium text-gray-700">
-              Files Changed (satu per baris)
+              Files Changed (one per line)
             </label>
             <textarea
               className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D5DB8]/60 focus:border-[#0D5DB8]/70"
@@ -411,8 +410,8 @@ export default function NewBugPage() {
               placeholder={`path/to/file1.cpp\npath/to/file2.js`}
             />
             <p className="text-xs text-gray-500">
-              Path file yang terdampak, memudahkan analisis graph antara
-              bug–file–commit.
+              File paths impacted by this bug, useful to build the bug–file–commit
+              graph.
             </p>
           </div>
         </div>
@@ -450,8 +449,8 @@ export default function NewBugPage() {
         <div className="mb-6">
           <h1 className="text-2xl font-semibold text-gray-900">Add New Bug</h1>
           <p className="mt-1 text-sm text-gray-500">
-            Buat tiket bug baru lengkap dengan konteks produk, relasi bug, dan
-            informasi commit supaya EasyFix-BKG bisa bekerja maksimal.
+            Create a new bug ticket with full product context, bug relationships,
+            and commit information so EasyFix-BKG can work at its best.
           </p>
         </div>
 
