@@ -6,7 +6,7 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState({
     fullName: "",
     jobTitle: "",
-    email: "toiniebe48@gmail.com", // bisa kamu ganti / ambil dari props / context
+    email: "toiniebe48@gmail.com", // you can replace this / get from props / context
     phone: "",
     photoUrl: "",
   });
@@ -41,7 +41,7 @@ export default function ProfilePage() {
     try {
       setProfileLoading(true);
 
-      // BE cuma kenal 2 field ini
+      // BE only recognizes these 2 fields
       const payload = {
         display_name: profile.fullName.trim() || "",
         photo_url: profile.photoUrl?.trim() || "",
@@ -71,7 +71,7 @@ export default function ProfilePage() {
             : "Profile updated successfully.",
       });
 
-      // sync balik kalau BE kirim display_name & photo_url
+      // sync back if BE returns display_name & photo_url
       setProfile((prev) => ({
         ...prev,
         fullName: data.display_name ?? prev.fullName,
@@ -202,7 +202,7 @@ export default function ProfilePage() {
                     Profile Settings
                   </h1>
                   <p className="text-sm text-slate-500 mt-1">
-                    Perbarui informasi akun dan kontakmu.
+                    Update your account and contact information.
                   </p>
                 </div>
                 <div className="flex items-center gap-2 rounded-full border border-slate-200 p-1 bg-slate-50">
@@ -239,13 +239,13 @@ export default function ProfilePage() {
                       htmlFor="fullName"
                       className="text-xs font-medium text-slate-600 uppercase tracking-wide"
                     >
-                      Fullname
+                      Full name
                     </label>
                     <input
                       id="fullName"
                       name="fullName"
                       type="text"
-                      placeholder="Masukkan nama lengkap"
+                      placeholder="Enter your full name"
                       value={profile.fullName}
                       onChange={handleProfileChange}
                       className="h-11 rounded-xl border border-slate-200 px-3 md:px-4 bg-slate-50/60 focus:bg-white focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all"
@@ -263,7 +263,7 @@ export default function ProfilePage() {
                       id="jobTitle"
                       name="jobTitle"
                       type="text"
-                      placeholder="Contoh: Backend Engineer"
+                      placeholder="Example: Backend Engineer"
                       value={profile.jobTitle}
                       onChange={handleProfileChange}
                       className="h-11 rounded-xl border border-slate-200 px-3 md:px-4 bg-slate-50/60 focus:bg-white focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all"
@@ -288,8 +288,8 @@ export default function ProfilePage() {
                     className="h-11 rounded-xl border border-slate-200 px-3 md:px-4 bg-slate-50/60 focus:bg-white focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all"
                   />
                   <p className="text-xs text-slate-500 mt-1">
-                    Link ke gambar profil, akan tersimpan sebagai{" "}
-                    <code>photo_url</code> di backend.
+                    A link to your profile image. It will be stored as{" "}
+                    <code>photo_url</code> in the backend.
                   </p>
                 </div>
 
@@ -309,7 +309,8 @@ export default function ProfilePage() {
                     className="h-11 rounded-xl border border-slate-300 px-3 md:px-4 bg-slate-300/70 text-slate-700 cursor-not-allowed"
                   />
                   <p className="text-xs text-slate-500 mt-1">
-                    Email digunakan sebagai akun login dan tidak dapat diubah.
+                    Your email is used as your login account and cannot be
+                    changed.
                   </p>
                 </div>
 
@@ -324,7 +325,7 @@ export default function ProfilePage() {
                     id="phone"
                     name="phone"
                     type="tel"
-                    placeholder="Contoh: +62 812 3456 7890"
+                    placeholder="Example: +62 812 3456 7890"
                     value={profile.phone}
                     onChange={handleProfileChange}
                     className="h-11 rounded-xl border border-slate-200 px-3 md:px-4 bg-slate-50/60 focus:bg-white focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all"
@@ -357,7 +358,7 @@ export default function ProfilePage() {
                     Change Password
                   </h2>
                   <p className="text-sm text-slate-500 mt-1">
-                    Demi keamanan, gunakan password yang kuat dan unik.
+                    For security, use a strong and unique password.
                   </p>
                 </div>
               </div>
@@ -390,7 +391,7 @@ export default function ProfilePage() {
                     id="currentPassword"
                     name="currentPassword"
                     type="password"
-                    placeholder="Masukkan password saat ini"
+                    placeholder="Enter your current password"
                     value={passwordForm.currentPassword}
                     onChange={handlePasswordChange}
                     className="h-11 rounded-xl border border-slate-200 px-3 md:px-4 bg-slate-50/60 focus:bg-white focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all"
@@ -409,13 +410,14 @@ export default function ProfilePage() {
                       id="newPassword"
                       name="newPassword"
                       type="password"
-                      placeholder="Minimal 8 karakter"
+                      placeholder="At least 8 characters"
                       value={passwordForm.newPassword}
                       onChange={handlePasswordChange}
                       className="h-11 rounded-xl border border-slate-200 px-3 md:px-4 bg-slate-50/60 focus:bg-white focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all"
                     />
                     <p className="text-xs text-slate-500 mt-1">
-                      Gunakan kombinasi huruf besar, kecil, angka, dan simbol.
+                      Use a combination of uppercase, lowercase, numbers, and
+                      symbols.
                     </p>
                   </div>
 
@@ -430,7 +432,7 @@ export default function ProfilePage() {
                       id="confirmPassword"
                       name="confirmPassword"
                       type="password"
-                      placeholder="Ulangi password baru"
+                      placeholder="Repeat your new password"
                       value={passwordForm.confirmPassword}
                       onChange={handlePasswordChange}
                       className="h-11 rounded-xl border border-slate-200 px-3 md:px-4 bg-slate-50/60 focus:bg-white focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all"
@@ -440,8 +442,8 @@ export default function ProfilePage() {
 
                 <div className="flex flex-col md:flex-row gap-3 md:gap-4 pt-2 md:items-center md:justify-between">
                   <p className="text-xs text-slate-500">
-                    Setelah password diganti, kamu mungkin diminta login ulang
-                    di beberapa device.
+                    After changing your password, you may be asked to log in
+                    again on some devices.
                   </p>
                   <button
                     type="submit"
