@@ -7,7 +7,12 @@ import { useEffect, useState } from "react";
 export default function DeveloperRecommendationPage() {
   const [organization, setOrganization] = useState("");
   const [project, setProject] = useState("");
+
+  // mode pencarian: by Bug ID atau Summary
+  const [mode, setMode] = useState("id"); // "id" | "summary"
+
   const [bugId, setBugId] = useState("");
+  const [summary, setSummary] = useState("");
   const [topK, setTopK] = useState(5);
 
   const [loadingTrain, setLoadingTrain] = useState(false);
@@ -75,33 +80,62 @@ export default function DeveloperRecommendationPage() {
       setError("Organization dan Project belum tersedia.");
       return;
     }
-    if (!bugId) {
+
+    if (mode === "id" && !bugId) {
       setError("Bug ID harus diisi dulu.");
+      return;
+    }
+
+    if (mode === "summary" && !summary.trim()) {
+      setError("Summary bug harus diisi dulu.");
       return;
     }
 
     try {
       setLoadingRecommend(true);
 
-      const res = await fetch(
-        `/api/ltr/${encodeURIComponent(organization)}/${encodeURIComponent(
-          project
-        )}/recommended-developers/${encodeURIComponent(
-          bugId
-        )}?top_k=${encodeURIComponent(topK)}`,
-        {
-          method: "GET",
-        }
-      );
+      let res;
 
-      const json = await res.json();
-      if (!res.ok || !json.ok) {
-        throw new Error(json.error || "Failed to get recommendations");
+      if (mode === "id") {
+        res = await fetch(
+          `/api/ltr/${encodeURIComponent(organization)}/${encodeURIComponent(
+            project
+          )}/recommended-developers/${encodeURIComponent(
+            bugId
+          )}?top_k=${encodeURIComponent(topK)}`,
+          {
+            method: "GET",
+          }
+        );
+      } else {
+        res = await fetch(
+          `/api/ltr/${encodeURIComponent(organization)}/${encodeURIComponent(
+            project
+          )}/recommended-developers/ltr?top_k=${encodeURIComponent(topK)}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              summary: summary.trim(),
+              component: "",
+            }),
+          }
+        );
       }
 
-      // backend mengembalikan result["recommended_developers"]
+      const json = await res.json();
+      console.log("LTR RESPONSE:", json); 
+      if (!res.ok || json?.error || json?.detail) {
+        throw new Error(
+          json.error || json.detail || "Failed to get recommendations"
+        );
+      }
+
       setRecommendations(json.recommended_developers || []);
       setRecMeta(json);
+
     } catch (err) {
       console.error("Recommend error:", err);
       setError(err.message || "Gagal mengambil rekomendasi developer");
@@ -120,7 +154,8 @@ export default function DeveloperRecommendationPage() {
             </h1>
             <p className="text-gray-700">
               Halaman ini menggunakan model Learning-to-Rank untuk
-              merekomendasikan developer berdasarkan Bug ID dari EasyFix.
+              merekomendasikan developer berdasarkan data bug di EasyFix. Kamu
+              bisa mencari berdasarkan <b>Bug ID</b> atau <b>Summary bug</b>.
             </p>
           </header>
 
@@ -157,8 +192,8 @@ export default function DeveloperRecommendationPage() {
             </div>
             <p className="text-xs text-gray-500 mt-1">
               Nilai ini otomatis diambil dari <code>localStorage</code> jika
-              tersedia (organization_name &amp; project_name), tapi masih bisa
-              diedit manual.
+              tersedia (<code>organization_name</code> &amp;{" "}
+              <code>project_name</code>), tapi masih bisa diedit manual.
             </p>
           </section>
 
@@ -199,39 +234,102 @@ export default function DeveloperRecommendationPage() {
           </section>
 
           {/* Recommendation Section */}
-
           <section className="border rounded-lg p-4 space-y-4">
-            <h2 className="text-lg font-semibold text-[#01559A]">
-              2. Get Recommended Developers
-            </h2>
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+              <h2 className="text-lg font-semibold text-[#01559A]">
+                2. Get Recommended Developers
+              </h2>
 
-            <div className="grid gap-3 md:grid-cols-3">
-              <div className="md:col-span-2">
-                <label className="block text-sm text-gray-600 mb-1">
+              {/* Toggle mode Bug ID / Summary */}
+              <div className="inline-flex rounded-lg border border-gray-200 bg-white p-1">
+                <button
+                  type="button"
+                  onClick={() => setMode("id")}
+                  className={`px-3 py-1 text-xs md:text-sm font-medium rounded-md ${
+                    mode === "id"
+                      ? "bg-[#01559A] text-white"
+                      : "text-[#01559A] hover:bg-gray-50"
+                  }`}
+                >
                   Bug ID
-                </label>
-                <input
-                  type="text"
-                  className="w-full border rounded px-3 py-2 text-sm"
-                  value={bugId}
-                  onChange={(e) => setBugId(e.target.value)}
-                  placeholder="contoh: 1873153"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">
-                  Top K
-                </label>
-                <input
-                  type="number"
-                  min={1}
-                  max={50}
-                  className="w-full border rounded px-3 py-2 text-sm"
-                  value={topK}
-                  onChange={(e) => setTopK(Number(e.target.value) || 5)}
-                />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMode("summary")}
+                  className={`px-3 py-1 text-xs md:text-sm font-medium rounded-md ml-1 ${
+                    mode === "summary"
+                      ? "bg-[#01559A] text-white"
+                      : "text-[#01559A] hover:bg-gray-50"
+                  }`}
+                >
+                  Summary
+                </button>
               </div>
             </div>
+
+            {/* Input berdasarkan mode */}
+            {mode === "id" ? (
+              <div className="grid gap-3 md:grid-cols-3">
+                <div className="md:col-span-2">
+                  <label className="block text-sm text-gray-600 mb-1">
+                    Bug ID
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full border rounded px-3 py-2 text-sm"
+                    value={bugId}
+                    onChange={(e) => setBugId(e.target.value)}
+                    placeholder="contoh: 1873153"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-600 mb-1">
+                    Top K
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={50}
+                    className="w-full border rounded px-3 py-2 text-sm"
+                    value={topK}
+                    onChange={(e) => setTopK(Number(e.target.value) || 5)}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm text-gray-600 mb-1">
+                    Bug Summary / Description
+                  </label>
+                  <textarea
+                    className="w-full border rounded px-3 py-2 text-sm resize-y"
+                    rows={4}
+                    value={summary}
+                    onChange={(e) => setSummary(e.target.value)}
+                    placeholder="Contoh: DevTools inspector tidak menampilkan teks ketika mengedit DOM pada Firefox Nightly..."
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    Summary akan dipakai untuk mencari topic yang relevan lalu
+                    merekomendasikan developer. Field <code>component</code>{" "}
+                    dari FE otomatis dikirim kosong.
+                  </p>
+                </div>
+                <div className="max-w-xs">
+                  <label className="block text-sm text-gray-600 mb-1">
+                    Top K
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={50}
+                    className="w-full border rounded px-3 py-2 text-sm"
+                    value={topK}
+                    onChange={(e) => setTopK(Number(e.target.value) || 5)}
+                  />
+                </div>
+              </div>
+            )}
 
             <button
               onClick={handleRecommend}
@@ -250,7 +348,7 @@ export default function DeveloperRecommendationPage() {
               <div className="mt-3 text-xs text-gray-700 space-y-1">
                 <div>
                   <span className="font-semibold">Bug ID:</span>{" "}
-                  {recMeta.bug_id || bugId}
+                  {recMeta.bug_id || (mode === "id" ? bugId : "-")}
                 </div>
                 {recMeta.topic_id && (
                   <div>
@@ -330,7 +428,7 @@ export default function DeveloperRecommendationPage() {
             {/* Kalau belum ada hasil tapi sudah request, bisa tambahkan info */}
             {!loadingRecommend && recMeta && recommendations.length === 0 && (
               <p className="mt-3 text-sm text-gray-600">
-                Tidak ada developer yang direkomendasikan untuk bug ini.
+                Tidak ada developer yang direkomendasikan untuk query ini.
               </p>
             )}
           </section>
