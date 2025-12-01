@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 
-const API_BASE_URL = process.env.CHATBOT_API_BASE_URL || "http://localhost:8000";
+const API_BASE_URL = process.env.CHATBOT_API_BASE_URL || "http://localhost:8001";
 
 export default function Chatbot() {
   const [isOpen, setIsOpen] = useState(false);

@@ -44,6 +44,14 @@ function Header() {
           >
             New Bug
           </button>
+          <button
+            className="text-[#0D5DB8] font-semibold text-left px-3 py-2 text-sm"
+            onClick={() => {
+              router.push("/developer-recommendation");
+            }}
+          >
+            developer recommendation
+          </button>
         </div>
         <div className="relative group">
           <div className="w-8 h-8 rounded-full bg-gray-300 cursor-pointer" />

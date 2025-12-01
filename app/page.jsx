@@ -1,15 +1,15 @@
 "use client";
+
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import PriceCard from "@/components/PriceCard";
 import Chatbot from "@/components/Chatbot";
-import { useSearchParams } from "next/navigation";
+
 
 export default function Home() {
   const [open, setOpen] = useState(false);
-  const searchParams = useSearchParams();
-  const showChatbot = searchParams.get("chatbot") === "true";
+  const [showChatbot, setShowChatbot] = useState(false); // ⬅️ TAMBAH INI
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
@@ -144,6 +144,15 @@ export default function Home() {
               >
                 Get Started
               </Link>
+
+              {/* Tombol buat munculin Chatbot */}
+              <button
+                type="button"
+                onClick={() => setShowChatbot((v) => !v)}
+                className="inline-flex items-center justify-center rounded-lg px-6 py-3 text-base sm:text-lg font-medium text-[#01559A] border border-[#01559A] hover:bg-[#01559A]/5 transition"
+              >
+                {"Open AI Assistant"}
+              </button>
             </div>
           </div>
         </section>
@@ -266,10 +275,12 @@ export default function Home() {
           </div>
         </div>
       </footer>
+
+      {/* CHATBOT: tampil kalau showChatbot = true */}
       {showChatbot && (
-        <main className="min-h-screen relative">
+        
           <Chatbot />
-        </main>
+
       )}
     </div>
   );
