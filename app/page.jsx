@@ -4,9 +4,12 @@ import Image from "next/image";
 import Link from "next/link";
 import PriceCard from "@/components/PriceCard";
 import Chatbot from "@/components/Chatbot";
+import { useSearchParams } from "next/navigation";
 
 export default function Home() {
   const [open, setOpen] = useState(false);
+  const searchParams = useSearchParams();
+  const showChatbot = searchParams.get("chatbot") === "true";
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
@@ -263,9 +266,11 @@ export default function Home() {
           </div>
         </div>
       </footer>
-      <main className="min-h-screen relative">
-                <Chatbot />
-              </main>
+      {showChatbot && (
+        <main className="min-h-screen relative">
+          <Chatbot />
+        </main>
+      )}
     </div>
   );
 }
