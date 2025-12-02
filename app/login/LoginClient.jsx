@@ -21,19 +21,12 @@ export default function LoginClient({ nextUrl = "/home" }) {
     try {
       const data = await login(email, password);
 
-      if (data.organization_name) {
-        localStorage.setItem("organization_name", data.organization_name);
+      if (email) {
+        localStorage.setItem("user_email", email);
       }
-      if (data.project_name) {
-        localStorage.setItem("project_name", data.project_name);
-      }
-      console.log("Login successful:", data);
 
-      if (!data.project_name || !data.project_name == null) {
-        router.push("/onboarding");
-      } else {
-        router.push("/home");
-      }
+      console.log("Login successful:", data);
+      router.push("/select-project");
     } catch (err) {
       console.error("Login error:", err);
       setMsg(err.message || "Login failed");
@@ -43,8 +36,8 @@ export default function LoginClient({ nextUrl = "/home" }) {
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
+    <main className="min-h-screen flex items-center justify-center bg-[#F3F6FB]">
+      <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md border border-[#E0E7FF]">
         <Image
           src="/easyfix-logo.png"
           alt="EasyFix Logo"
@@ -55,18 +48,18 @@ export default function LoginClient({ nextUrl = "/home" }) {
         <h1 className="text-2xl font-bold mb-2 text-center text-[#01559A]">
           Welcome Back
         </h1>
-        <p className="mb-4 text-center text-[#44444E]">
+        <p className="mb-4 text-center text-[#44444E] text-sm">
           Glad to see you again 👋 <br />
           Login to your account below
         </p>
 
         <form className="space-y-4" onSubmit={onSubmit}>
           <div>
-            <label className="block text-gray-700">Email</label>
+            <label className="block text-gray-700 text-sm">Email</label>
             <input
               type="email"
-              className="w-full mt-1 p-2 border rounded border-[#44444E]"
-              placeholder="youre@email.com"
+              className="w-full mt-1 p-2 border rounded-md border-[#CBD5E1] focus:outline-none focus:ring-2 focus:ring-[#01559A]"
+              placeholder="you@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -74,10 +67,10 @@ export default function LoginClient({ nextUrl = "/home" }) {
           </div>
 
           <div>
-            <label className="block text-gray-700">Password</label>
+            <label className="block text-gray-700 text-sm">Password</label>
             <input
               type="password"
-              className="w-full mt-1 p-2 border rounded border-[#44444E]"
+              className="w-full mt-1 p-2 border rounded-md border-[#CBD5E1] focus:outline-none focus:ring-2 focus:ring-[#01559A]"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -87,19 +80,20 @@ export default function LoginClient({ nextUrl = "/home" }) {
           <button
             type="submit"
             disabled={disabled}
-            className={`w-full ${
-              disabled
-                ? "bg-gray-400"
-                : "bg-[#01559A] hover:bg-[#0468ba] transition"
-            }  text-white p-2 rounded `}
+            className={`w-full mt-2 text-white p-2 rounded-md font-medium
+              ${
+                disabled
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-[#01559A] hover:bg-[#0468ba] transition"
+              }`}
           >
-            Login
+            {disabled ? "Signing in..." : "Login"}
           </button>
 
-          {msg && <p className="text-red-500 text-center mt-2">{msg}</p>}
+          {msg && <p className="text-red-500 text-center mt-2 text-sm">{msg}</p>}
         </form>
 
-        <p className="mt-4 text-center text-gray-600">
+        <p className="mt-4 text-center text-gray-600 text-sm">
           Don&apos;t have an account?{" "}
           <Link href="/register" className="text-[#01559A] font-semibold">
             Sign Up

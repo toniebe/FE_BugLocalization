@@ -4,7 +4,7 @@ export async function signup(email, password, displayName) {
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ email, password, display_name: displayName }),
   });
-  if (!r.ok) throw new Error((await r.json()).error || "Signup failed");
+  if (!r.ok) throw new Error((await r.json()).detail || "Signup failed");
   return r.json();
 }
 
@@ -18,7 +18,7 @@ export async function login(email, password) {
   const json = await r.json();
 
   if (!r.ok || !json.ok) {
-    throw new Error(json.error || "Login failed");
+    throw new Error(json.detail || "Login failed");
   }
 
   return json;
