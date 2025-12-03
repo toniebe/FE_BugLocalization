@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation";
 import LayoutCustom from "@/components/LayoutCustom";
 import { searchBugs } from "../_lib/search-client";
 import { bug_sample_data } from "../home/data";
-
+import { ThumbDownIcon, ThumbUpIcon } from "@/components/Icon";
+import { sendBugFeedback } from "../_lib/feedback-client";
 
 const SAMPLE = bug_sample_data;
 
@@ -19,8 +20,6 @@ function useDebounce(value, delay = 500) {
   return v;
 }
 
-
-
 /**
  * MAIN PAGE: Search + graph/list + sections
  */
@@ -28,14 +27,15 @@ export default function SearchClient() {
   const [q, setQ] = useState("");
   const [limit, setLimit] = useState(25);
   const [devLimit, setDevLimit] = useState(10);
-  const [mode, setMode] = useState("graph"); 
-  const [section, setSection] = useState("search"); 
+  const [mode, setMode] = useState("graph");
+  const [section, setSection] = useState("search");
   const [data, setData] = useState(SAMPLE);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
 
   const [orgName, setOrgName] = useState("");
   const [projectName, setProjectName] = useState("");
+  const [feedbackStatus, setFeedbackStatus] = useState({});
 
   const router = useRouter();
   const debouncedQ = useDebounce(q, 500);
@@ -127,6 +127,40 @@ export default function SearchClient() {
     }
   }
 
+  async function handleFeedback(bug, isRelevant) {
+    if (!orgName || !projectName) {
+      console.warn("Org / project belum diset, feedback di-skip");
+      return;
+    }
+
+    try {
+      setFeedbackStatus((prev) => ({
+        ...prev,
+        [bug.bug_id]: "sending",
+      }));
+
+      await sendBugFeedback({
+        organization: orgName,
+        project: projectName,
+        bug_id: bug.bug_id,
+        topic_id: bug.topic_id || bug.primary_topic_id || "",
+        query: data?.query || q || "",
+        is_relevant: isRelevant,
+      });
+
+      setFeedbackStatus((prev) => ({
+        ...prev,
+        [bug.bug_id]: isRelevant ? "up" : "down",
+      }));
+    } catch (e) {
+      console.error("Feedback gagal:", e);
+      setFeedbackStatus((prev) => ({
+        ...prev,
+        [bug.bug_id]: "error",
+      }));
+    }
+  }
+
   const graphData = useMemo(() => {
     if (!data) return null;
 
@@ -181,40 +215,96 @@ export default function SearchClient() {
           <div className="text-sm text-gray-500">Tidak ada hasil.</div>
         ) : (
           <ul className="space-y-3">
-            {data.bugs.map((b, index) => (
-              <li
-                key={`${b.id || b.bug_id}-${index}`}
-                onClick={() => router.push(`/bugs/${b.bug_id}`)}
-                className="border rounded-lg p-3 cursor-pointer hover:border-[#0D5DB8] hover:bg-blue-50/40 transition-colors"
-              >
-                <div className="font-medium text-sm text-gray-900">
-                  {b.summary || b.title}
-                </div>
-                <div className="text-xs text-gray-600 mt-1">
-                  <span className="mr-2">ID: {b.id || b.bug_id}</span>
-                  <span className="mr-2">Status: {b.status}</span>
-                  {b.topic_label && (
-                    <span className="mr-2">Topic: {b.topic_label}</span>
-                  )}
-                  {typeof b.topic_score === "number" && (
-                    <span>Score: {b.topic_score.toFixed(3)}</span>
-                  )}
-                </div>
-                {b.assigned_to && (
-                  <div className="text-xs text-gray-600 mt-1">
-                    Assignee:{" "}
-                    {typeof b.assigned_to === "string"
-                      ? b.assigned_to
-                      : b.assigned_to.email || b.assigned_to.name}
+            {data.bugs.map((b, index) => {
+              const status = feedbackStatus[b.bug_id];
+              const isLiked = status === "up";
+              const isDisliked = status === "down";
+              const isSending = status === "sending";
+
+              return (
+                <li
+                  key={`${b.id || b.bug_id}-${index}`}
+                  onClick={() => router.push(`/bugs/${b.bug_id}`)}
+                  className="border rounded-lg p-3 cursor-pointer hover:border-[#0D5DB8] hover:bg-blue-50/40 transition-colors"
+                >
+                  <div className="font-medium text-sm text-gray-900">
+                    {b.summary || b.title}
                   </div>
-                )}
-              </li>
-            ))}
+
+                  <div className="text-xs text-gray-600 mt-1">
+                    <span className="mr-2">ID: {b.id || b.bug_id}</span>
+                    <span className="mr-2">Status: {b.status}</span>
+                    {b.topic_label && (
+                      <span className="mr-2">Topic: {b.topic_label}</span>
+                    )}
+                    {typeof b.topic_score === "number" && (
+                      <span>Score: {b.topic_score.toFixed(3)}</span>
+                    )}
+                  </div>
+
+                  {b.assigned_to && (
+                    <div className="text-xs text-gray-600 mt-1">
+                      Assignee:{" "}
+                      {typeof b.assigned_to === "string"
+                        ? b.assigned_to
+                        : b.assigned_to.email || b.assigned_to.name}
+                    </div>
+                  )}
+
+                  <div className="mt-2 flex items-center gap-2 text-[11px] text-gray-500">
+                    <span>Feedback:</span>
+
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (!isSending) handleFeedback(b, true);
+                      }}
+                      className={`px-2 py-0.5 rounded-full border flex items-center gap-1 transition-colors
+                      ${
+                        isLiked
+                          ? "border-emerald-500 bg-emerald-50 text-emerald-700"
+                          : "border-emerald-300 text-emerald-600 hover:bg-emerald-50"
+                      }`}
+                    >
+                      <ThumbUpIcon className="w-4 h-4 text-emerald-700" />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (!isSending) handleFeedback(b, false);
+                      }}
+                      className={`px-2 py-0.5 rounded-full border flex items-center gap-1 transition-colors
+                      ${
+                        isDisliked
+                          ? "border-rose-500 bg-rose-50 text-rose-700"
+                          : "border-rose-300 text-rose-600 hover:bg-rose-50"
+                      }`}
+                    >
+                      <ThumbDownIcon className="w-4 h-4 text-red-500" />
+                    </button>
+
+                    {isSending && (
+                      <span className="text-[10px] text-gray-400">
+                        Sending…
+                      </span>
+                    )}
+                    {status === "error" && (
+                      <span className="text-[10px] text-red-500 ml-1">
+                        Failed
+                      </span>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>
     );
-  }, [data, router]);
+  }, [data, router, feedbackStatus]);
 
   const GraphPane = useMemo(() => {
     return (
@@ -360,8 +450,6 @@ export default function SearchClient() {
 
         {/* MAIN */}
         <section className="col-span-12 md:col-span-9">
-       
-
           {/* Body per section */}
           {section === "search" && (
             <>
@@ -400,8 +488,6 @@ export default function SearchClient() {
               {mode === "graph" ? GraphPane : BugsList}
             </>
           )}
-
-       
         </section>
       </div>
     </LayoutCustom>
