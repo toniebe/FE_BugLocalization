@@ -155,10 +155,10 @@ export default function SelectProjectPage() {
                       </div>
                       <div>
                         <p className="text-xs uppercase tracking-wide text-gray-500">
-                          {p.organization_name || "Organization"}
+                          {p.org_id}
                         </p>
                         <p className="text-sm md:text-base font-semibold text-gray-900">
-                          {p.project_name || "Project name"}
+                          {p.project_id}
                         </p>
                       </div>
                     </div>

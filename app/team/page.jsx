@@ -3,25 +3,24 @@
 import { useEffect, useState } from "react";
 import LayoutCustom from "@/components/LayoutCustom";
 
-const MOCK_MEMBERS = [
-  { email: "owner@example.com", role: "owner" },
-  { email: "dev1@example.com", role: "member" },
-  { email: "qa@example.com", role: "member" },
-];
 
 export default function TeamPage() {
-  const [members, setMembers] = useState(MOCK_MEMBERS);
+  const [members, setMembers] = useState([]);
+  const [membersLoading, setMembersLoading] = useState(false);
+  const [membersError, setMembersError] = useState("");
+
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("member");
   const [orgId, setOrgId] = useState("");
   const [projectId, setProjectId] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false); 
   const [msg, setMsg] = useState("");
-  const [error, setError] = useState("");
+  const [error, setError] = useState(""); 
+
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    // kalau sebelumnya kamu simpan org_id / project_id di localStorage
+
     const org =
       localStorage.getItem("org_id") ||
       localStorage.getItem("organization_name") ||
@@ -30,9 +29,71 @@ export default function TeamPage() {
       localStorage.getItem("project_id") ||
       localStorage.getItem("project_name") ||
       "";
+
     setOrgId(org);
     setProjectId(proj);
   }, []);
+
+  useEffect(() => {
+    if (!orgId || !projectId) return;
+
+    const controller = new AbortController();
+
+    async function fetchMembers() {
+      setMembersLoading(true);
+      setMembersError("");
+
+      try {
+        const res = await fetch(
+          `/api/project-members/${encodeURIComponent(
+            orgId
+          )}/${encodeURIComponent(projectId)}`,
+          {
+            method: "GET",
+            signal: controller.signal,
+          }
+        );
+
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok) {
+          throw new Error(
+            data?.detail || data?.error || "Failed to fetch project members"
+          );
+        }
+
+        // data bentuknya:
+        // {
+        //   organization: "neo",
+        //   project: "4j",
+        //   count: 0,
+        //   members: [ { uid, email, display_name, roles, primary_role, projects } ]
+        // }
+        const membersFromApi = Array.isArray(data.members) ? data.members : [];
+
+        // Normalisasi ke bentuk { email, role }
+        const normalized = membersFromApi.map((m) => ({
+          email: m.email || "",
+          role: m.primary_role || "member",
+          display_name: m.display_name || "",
+          raw: m,
+        }));
+
+        setMembers(normalized);
+      } catch (err) {
+        if (err.name === "AbortError") return;
+        console.error("Fetch members error:", err);
+        setMembersError(err.message || "Failed to fetch project members");
+        setMembers([]); // kosongin aja kalau error
+      } finally {
+        setMembersLoading(false);
+      }
+    }
+
+    fetchMembers();
+
+    return () => controller.abort();
+  }, [orgId, projectId]);
 
   const handleAddMember = async (e) => {
     e.preventDefault();
@@ -66,16 +127,19 @@ export default function TeamPage() {
         }),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
         throw new Error(data.detail || data.message || "Failed to add member");
       }
 
-      // Tambahkan ke list members
+      // Tambahkan ke list members di FE
       setMembers((prev) => [
         ...prev,
-        { email: data.email, role: data.role || "member" },
+        {
+          email: data.email || email,
+          role: data.role || role || "member",
+        },
       ]);
 
       setMsg(data.message || "User added to project successfully");
@@ -129,15 +193,27 @@ export default function TeamPage() {
               </h2>
             </div>
 
-            {members.length === 0 ? (
+            {membersLoading && (
+              <p className="text-sm text-gray-500 mb-2">Loading members…</p>
+            )}
+
+            {membersError && (
+              <p className="text-xs text-red-600 mb-2 bg-red-50 border border-red-100 rounded-md px-2 py-1.5">
+                {membersError}
+              </p>
+            )}
+
+            {!membersLoading && !membersError && members.length === 0 && (
               <p className="text-sm text-gray-500">
                 Belum ada anggota. Tambahkan email di panel sebelah.
               </p>
-            ) : (
+            )}
+
+            {members.length > 0 && (
               <ul className="divide-y divide-gray-100">
                 {members.map((m, idx) => (
                   <li
-                    key={`${m.email}-${idx}`}
+                    key={`${m.email || "member"}-${idx}`}
                     className="flex items-center justify-between py-3"
                   >
                     <div className="flex items-center gap-3">
@@ -146,7 +222,7 @@ export default function TeamPage() {
                       </div>
                       <div>
                         <p className="text-sm font-medium text-gray-900">
-                          {m.email}
+                          {m.email || "Unknown user"}
                         </p>
                         <p className="text-xs text-gray-500 capitalize">
                           {m.role || "member"}

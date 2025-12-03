@@ -5,6 +5,49 @@ import { useRouter } from "next/navigation";
 import LayoutCustom from "@/components/LayoutCustom";
 
 /**
+ * Hook animasi angka naik (count up)
+ */
+function useCountUp(target, duration = 800) {
+  const [value, setValue] = useState(0);
+  const frameRef = useRef(null);
+
+  useEffect(() => {
+    if (typeof target !== "number" || Number.isNaN(target)) {
+      setValue(0);
+      return;
+    }
+
+    const startValue = 0;
+    const diff = target - startValue;
+    if (diff === 0) {
+      setValue(target);
+      return;
+    }
+
+    const startTime = performance.now();
+
+    const animate = (now) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const next = Math.round(startValue + diff * progress);
+      setValue(next);
+
+      if (progress < 1) {
+        frameRef.current = requestAnimationFrame(animate);
+      }
+    };
+
+    frameRef.current = requestAnimationFrame(animate);
+
+    return () => {
+      if (frameRef.current) cancelAnimationFrame(frameRef.current);
+    };
+  }, [target, duration]);
+
+  return value;
+}
+
+/**
  * SECTION: LIST DEVELOPERS (infinite scroll)
  */
 function DeveloperListSection({ orgName, projectName }) {
@@ -396,16 +439,20 @@ function TopicListSection({ orgName, projectName }) {
 }
 
 /**
- * HOME PAGE: hanya summary + 3 list (bugs, developers, topics)
+ * HOME PAGE: summary + 3 list (bugs, developers, topics)
  */
 export default function HomePage() {
   const [orgName, setOrgName] = useState("");
   const [projectName, setProjectName] = useState("");
 
-  // Hardcoded totals
-  const TOTAL_BUGS = 1234;
-  const TOTAL_DEVELOPERS = 56;
-  const TOTAL_TOPICS = 78;
+  // state untuk dashboard summary dari /api/dashboard
+  const [dashboard, setDashboard] = useState(null);
+  const [dashboardLoading, setDashboardLoading] = useState(false);
+
+  // animated values (kalau belum ada data -> 0)
+  const totalBugs = useCountUp(dashboard?.bug_count ?? 0);
+  const totalDevelopers = useCountUp(dashboard?.developer_count ?? 0);
+  const totalTopics = useCountUp(dashboard?.commit_count ?? 0);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -415,13 +462,39 @@ export default function HomePage() {
     setProjectName(proj);
   }, []);
 
+  // hit endpoint dashboard ketika org+project sudah ada
+  useEffect(() => {
+    if (!orgName || !projectName) return;
+
+    setDashboardLoading(true);
+
+    fetch(
+      `/api/dashboard?organization=${encodeURIComponent(
+        orgName
+      )}&project=${encodeURIComponent(projectName)}`
+    )
+      .then((res) =>
+        res.json().then((json) => ({ ok: res.ok, json }))
+      )
+      .then(({ ok, json }) => {
+        if (!ok) {
+          throw new Error(json.error || json.detail || "Failed to load dashboard");
+        }
+        setDashboard(json);
+      })
+      .catch((e) => {
+        console.error("Dashboard error:", e);
+        setDashboard(null);
+      })
+      .finally(() => setDashboardLoading(false));
+  }, [orgName, projectName]);
+
   return (
     <LayoutCustom>
       <div className="mx-auto px-4 py-4">
         {/* Header + info project */}
         <div className="mb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
           <div>
-
             {orgName && projectName && (
               <p className="text-xs text-gray-500 mt-1">
                 Project: <span className="font-semibold">{orgName}</span> /{" "}
@@ -435,20 +508,20 @@ export default function HomePage() {
         <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-white border border-[#e4e4e4] rounded-lg p-4">
             <p className="text-xs text-gray-500">Total Bugs</p>
-            <p className="text-2xl font-semibold text-[#0D5DB8] mt-1">
-              {TOTAL_BUGS}
+            <p className="text-2xl font-semibold text-[#0D5DB8] mt-1 tabular-nums">
+              {dashboardLoading && !dashboard ? "…" : totalBugs}
             </p>
           </div>
           <div className="bg-white border border-[#e4e4e4] rounded-lg p-4">
             <p className="text-xs text-gray-500">Total Developers</p>
-            <p className="text-2xl font-semibold text-emerald-600 mt-1">
-              {TOTAL_DEVELOPERS}
+            <p className="text-2xl font-semibold text-emerald-600 mt-1 tabular-nums">
+              {dashboardLoading && !dashboard ? "…" : totalDevelopers}
             </p>
           </div>
           <div className="bg-white border border-[#e4e4e4] rounded-lg p-4">
-            <p className="text-xs text-gray-500">Total Topics</p>
-            <p className="text-2xl font-semibold text-amber-600 mt-1">
-              {TOTAL_TOPICS}
+            <p className="text-xs text-gray-500">Total Commit</p>
+            <p className="text-2xl font-semibold text-amber-600 mt-1 tabular-nums">
+              {dashboardLoading && !dashboard ? "…" : totalTopics}
             </p>
           </div>
         </div>

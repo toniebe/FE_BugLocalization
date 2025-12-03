@@ -30,7 +30,7 @@ export async function GET(req) {
     offset,
   });
 
-  const res = await fetch(`${API_BASE}/api/bug/bugs?${qs.toString()}`, {
+  const res = await fetch(`${API_BASE}/api/bug/?${qs.toString()}`, {
     headers: {
       "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
