@@ -29,7 +29,7 @@ export default function SearchClient() {
   const [devLimit, setDevLimit] = useState(10);
   const [mode, setMode] = useState("graph");
   const [section, setSection] = useState("search");
-  const [data, setData] = useState(SAMPLE);
+  const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
 
