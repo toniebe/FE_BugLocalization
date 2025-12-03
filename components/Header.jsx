@@ -176,6 +176,14 @@ function Header() {
           >
             Developer Recommendation
           </button>
+          <button
+            className="text-[#0D5DB8] font-medium px-3 py-2 text-sm rounded hover:bg-blue-50/60 transition"
+            onClick={() => {
+              router.push("/team");
+            }}
+          >
+            Team
+          </button>
         </nav>
 
         {/* Right: Project dropdown + user dropdown */}
@@ -288,11 +296,20 @@ function Header() {
                   className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
                   onClick={() => {
                     setUserMenuOpen(false);
+                    router.push("/onboarding");
+                  }}
+                >
+                  Create New Project
+                </button>
+                {/* <button
+                  className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                  onClick={() => {
+                    setUserMenuOpen(false);
                     router.push("/team");
                   }}
                 >
                   Team
-                </button>
+                </button> */}
                 <button
                   className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
                   onClick={() => {
