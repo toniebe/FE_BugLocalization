@@ -25,7 +25,7 @@ export async function GET(req, { params }) {
 
   try {
     const data = await apiFetch(
-      `/api/bug/developers/${encodeURIComponent(devKey)}?organization_name=${encodeURIComponent(
+      `/api/developers/{organization}/{project}/${encodeURIComponent(devKey)}?organization_name=${encodeURIComponent(
         org
       )}&project_name=${encodeURIComponent(proj)}`,
       {
