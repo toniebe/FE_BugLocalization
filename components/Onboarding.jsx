@@ -1,3 +1,4 @@
+// src/components/Onboarding.jsx (atau sesuai path kamu)
 "use client";
 import React from "react";
 
@@ -5,17 +6,22 @@ export const ONBOARDING_STEPS = [
   {
     id: 1,
     label: "Add Project",
-    description: "Add your project name for started using easyfix",
+    description: "Add your project name to get started with EasyFix.",
   },
   {
     id: 2,
-    label: "Setup Bug Data",
-    description: "Upload your bug data json for support bug resolution",
+    label: "Upload Bug Data",
+    description: "Upload your bug JSON file to prepare data source.",
   },
   {
     id: 3,
-    label: "Start Using Easyfix",
-    description: "Start fixing bug with bug resolution easy fix",
+    label: "Check Bug Data Env",
+    description: "Verify ML environment & data source configuration.",
+  },
+  {
+    id: 4,
+    label: "Start Using EasyFix",
+    description: "Run ML engine and begin using bug resolution.",
   },
 ];
 
@@ -27,7 +33,7 @@ export default function OnboardingLayout({ currentStep, children }) {
           {/* Left sidebar */}
           <aside className="w-full md:w-1/3 bg-gradient-to-b from-[#01559A] to-[#001D34] text-white p-8 flex flex-col">
             <h2 className="text-2xl font-semibold mb-6">
-              Get Started by setup your project!
+              Get started by setting up your project!
             </h2>
 
             {/* TIMELINE */}
@@ -35,18 +41,38 @@ export default function OnboardingLayout({ currentStep, children }) {
               <div className="absolute left-15 top-3 bottom-3 border-l-2 border-white/40" />
 
               {ONBOARDING_STEPS.map((step) => {
-                const isActive = step.id === currentStep; 
+                const isActive = step.id === currentStep;
+                const isCompleted = step.id < currentStep;
 
                 return (
-                  <div key={step.id} className="relative flex items-start mb-10">
-                    <div className="relative z-10 w-15 h-12 rounded-full flex items-center justify-center text-sm font-bold border-2 border-white bg-white">
-                      <img className="mx-auto my-auto w-6 h-6" src={`/onboarding-${step.id}.png`} />
+                  <div
+                    key={step.id}
+                    className="relative flex items-start mb-10"
+                  >
+                    <div
+                      className={
+                        "relative z-10 w-12 h-12 rounded-full border-white bg-white flex items-center justify-center text-sm font-bold border-2 "
+                        
+                        
+                      }
+                    >
+                      {/* kalau punya icon onboarding-1.png dst, tetap dipakai */}
+                      <img
+                        className="w-6 h-6"
+                        src={`/onboarding-${step.id}.png`}
+                        alt={step.label}
+                      />
                     </div>
 
                     <div className="ml-3 mt-1">
                       <div
                         className={
-                          "font-semibold" + (isActive ? " text-white" : " text-blue-100")
+                          "font-semibold" +
+                          (isActive
+                            ? " text-white"
+                            : isCompleted
+                            ? " text-emerald-100"
+                            : " text-blue-100")
                         }
                       >
                         {step.label}

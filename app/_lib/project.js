@@ -1,3 +1,40 @@
+async function handleJson(res) {
+  const text = await res.text();
+  try {
+    return JSON.parse(text || "{}");
+  } catch {
+    return { raw: text };
+  }
+}
+
+export async function uploadBugData(orgName, projectName, file) {
+
+
+  const formData = new FormData();
+  formData.append("file", file, file.name);
+
+  const res = await fetch(
+    `/api/projects/${encodeURIComponent(
+      orgName
+    )}/${encodeURIComponent(projectName)}/upload-bugs`,
+    {
+      method: "POST",
+      body: formData,
+      // kalau kamu pakai Bearer token, bisa forward di sini
+      // headers: { Authorization: `Bearer ${token}` },
+    }
+  );
+
+  const data = await handleJson(res);
+
+  if (!res.ok) {
+    const msg = data.detail || data.message || "Failed to upload bug data";
+    throw new Error(msg);
+  }
+
+  return data;
+}
+
 export async function createProject(organization_name, project_name) {
   const r = await fetch("/api/projects/create", {
     method: "POST",
@@ -8,7 +45,7 @@ export async function createProject(organization_name, project_name) {
   if (!r.ok || !data.ok) {
     throw new Error(data.error || "Failed to create project");
   }
-  return data; 
+  return data;
 }
 
 export async function checkMlEnv(organizationName, projectName) {
@@ -42,9 +79,7 @@ export async function startMlEngine(organizationName, projectName) {
 
   const data = await r.json();
   if (!r.ok || !data.ok) {
-    throw new Error(
-      data.error || data.message || "Failed to start ML engine"
-    );
+    throw new Error(data.error || data.message || "Failed to start ML engine");
   }
   return data;
 }
