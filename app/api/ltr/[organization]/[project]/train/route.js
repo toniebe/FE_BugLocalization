@@ -20,7 +20,8 @@ export async function POST(req, { params }) {
   const { searchParams } = new URL(req.url);
   const forceRetrain = searchParams.get("force_retrain") ?? "false";
 
-  const idToken = cookies().get("id_token")?.value;
+  const cookieStore = await cookies();
+  const idToken = cookieStore.get("id_token")?.value;
   if (!idToken) {
     return NextResponse.json(
       { ok: false, error: "Not authenticated (no id_token cookie)" },

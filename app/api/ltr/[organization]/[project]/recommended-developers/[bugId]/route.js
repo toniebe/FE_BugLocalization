@@ -20,7 +20,8 @@ export async function GET(req, { params }) {
   const { searchParams } = new URL(req.url);
   const topK = searchParams.get("top_k") ?? "5";
 
-  const idToken = cookies().get("id_token")?.value;
+  const cookieStore = await cookies();
+  const idToken = cookieStore.get("id_token")?.value;
   if (!idToken) {
     return NextResponse.json(
       { ok: false, error: "Not authenticated (no id_token cookie)" },
@@ -30,9 +31,7 @@ export async function GET(req, { params }) {
 
   const url = `${API_BASE_URL}/api/ltr/${encodeURIComponent(
     organization
-  )}/${encodeURIComponent(
-    project
-  )}/recommended-developers/${encodeURIComponent(
+  )}/${encodeURIComponent(project)}/recommended-developers/${encodeURIComponent(
     bugId
   )}?top_k=${encodeURIComponent(topK)}`;
 

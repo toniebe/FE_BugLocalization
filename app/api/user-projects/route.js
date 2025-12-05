@@ -11,7 +11,8 @@ export async function GET(req) {
     return NextResponse.json({ detail: "email is required" }, { status: 400 });
   }
 
-  const idToken = cookies().get("id_token")?.value;
+  const cookieStore = await cookies();
+  const idToken = cookieStore.get("id_token")?.value;
   if (!idToken) {
     return NextResponse.json(
       { ok: false, error: "Not authenticated (no id_token cookie)" },
