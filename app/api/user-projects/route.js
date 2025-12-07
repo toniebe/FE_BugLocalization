@@ -13,6 +13,7 @@ export async function GET(req) {
     );
   }
 
+  // Next 15: cookies() harus di-await
   const cookieStore = await cookies();
   const idToken = cookieStore.get("id_token")?.value;
 
@@ -23,23 +24,43 @@ export async function GET(req) {
     );
   }
 
-  const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/user/projects/?email=${encodeURIComponent(
+  // Pakai base URL API yang benar, support 2 nama env:
+  const baseApiUrl =
+    process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL;
+
+  if (!baseApiUrl) {
+    console.error(
+      "user-projects error: NEXT_PUBLIC_API_BASE_URL / NEXT_PUBLIC_API_URL tidak diset"
+    );
+    return NextResponse.json(
+      { ok: false, error: "API base URL not configured" },
+      { status: 500 }
+    );
+  }
+
+  // buang trailing slash kalau ada, lalu tambahkan path
+  const normalizedBase = baseApiUrl.replace(/\/+$/, "");
+  const apiUrl = `${normalizedBase}/user/projects/?email=${encodeURIComponent(
     email
   )}`;
-
-  
 
   async function fetchWithRetry(attempt = 1) {
     const res = await fetch(apiUrl, {
       headers: {
         Authorization: `Bearer ${idToken}`,
       },
+      // optional, supaya selalu fresh:
+      // cache: "no-store",
     });
 
-    // kalau ok langsung return
     if (res.ok) return res;
 
-    const text = await res.text();
+    let text = "";
+    try {
+      text = await res.text();
+    } catch {
+      text = "";
+    }
 
     const isTooEarly =
       text.includes("Token used too early") ||
@@ -51,18 +72,19 @@ export async function GET(req) {
       return fetchWithRetry(2);
     }
 
-    // kalau bukan error itu, atau sudah pernah retry → lempar error
+    // kalau bukan error itu atau sudah pernah retry → lempar error
     throw new Error(text || `Request failed with status ${res.status}`);
   }
 
   try {
-    const res = await fetchWithRetry();
-    const data = await res.json();
-    return NextResponse.json(data, { status: res.status });
+    const upstreamRes = await fetchWithRetry();
+    const data = await upstreamRes.json();
+    // lempar balik apa adanya dari BE (status ikut upstream)
+    return NextResponse.json(data, { status: upstreamRes.status });
   } catch (err) {
-    console.error("user-projects error:", err.message);
+    console.error("user-projects error:", err?.message || err);
     return NextResponse.json(
-      { ok: false, error: err.message || "Internal error" },
+      { ok: false, error: err?.message || "Internal error" },
       { status: 500 }
     );
   }
