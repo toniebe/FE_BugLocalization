@@ -100,3 +100,25 @@ export async function getMlStatus(organizationName, projectName) {
   }
   return data;
 }
+
+// app/_lib/project.js
+
+export async function getProjectStatus(org, proj) {
+  const params = new URLSearchParams({ org, proj });
+
+  const res = await fetch(`/api/project-status?${params.toString()}`, {
+    method: "GET",
+  });
+
+  let data = {};
+  try {
+    data = await res.json();
+  } catch (e) {}
+
+  if (!res.ok) {
+    throw new Error(data.detail || "Failed to fetch project status");
+  }
+
+  return data;
+}
+

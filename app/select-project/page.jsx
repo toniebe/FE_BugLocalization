@@ -1,8 +1,10 @@
+// app/select-project/page.js
 "use client";
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import LayoutCustom from "@/components/LayoutCustom";
+import { getProjectStatus } from "@/app/_lib/project";
 
 export default function SelectProjectPage() {
   const router = useRouter();
@@ -10,6 +12,7 @@ export default function SelectProjectPage() {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
+  const [selectingKey, setSelectingKey] = useState(null); // buat indikator pas klik
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -54,22 +57,66 @@ export default function SelectProjectPage() {
     fetchProjects();
   }, [email]);
 
-  const handleSelectProject = (p) => {
-    if (typeof window !== "undefined") {
-      if (p.organization_name) {
-        localStorage.setItem("organization_name", p.organization_name);
-      }
-      if (p.project_name) {
-        localStorage.setItem("project_name", p.project_name);
-      }
-      if (p.org_id) localStorage.setItem("organization_name", p.org_id);
-      if (p.project_id) localStorage.setItem("project_name", p.project_id);
+  const handleSelectProject = async (p) => {
+    if (typeof window === "undefined") return;
+
+    // tentukan org & proj yang mau dipakai ke backend
+    const org = p.org_id || p.organization_name;
+    const proj = p.project_id || p.project_name;
+
+    if (!org || !proj) {
+      console.error("Missing org or project in selected project", p);
+      return;
     }
 
-    router.push("/home");
+    // simpan ke localStorage (nama & id kalau ada)
+    localStorage.setItem("organization_name", org);
+    localStorage.setItem("project_name", proj);
+
+    if (p.org_id) localStorage.setItem("organization_id", p.org_id);
+    if (p.project_id) localStorage.setItem("project_id", p.project_id);
+
+    const projectKey = `${org}-${proj}`;
+    setSelectingKey(projectKey);
+
+    try {
+      // panggil status ke backend
+      const status = await getProjectStatus(org, proj);
+
+      // tentukan apakah onboarding sudah complete
+      const steps = status?.steps || {};
+      const isCompleted =
+        steps.project_created &&
+        steps.datasource_created &&
+        steps.model_created &&
+        steps.db_stored;
+
+      if (isCompleted) {
+        // sudah lengkap semua step -> langsung ke home
+        localStorage.removeItem("onboarding_step");
+        router.push("/home");
+      } else {
+        // belum lengkap -> mulai onboarding dari current_step
+        const currentStep = Number(status.current_step) || 1;
+        localStorage.setItem("onboarding_step", String(currentStep));
+        router.push("/onboarding");
+      }
+    } catch (e) {
+      console.error("Failed to fetch project status:", e);
+      // kalau gagal cek status, fallback: mulai onboarding dari step 1
+      localStorage.setItem("onboarding_step", "1");
+      router.push("/onboarding");
+    } finally {
+      setSelectingKey(null);
+    }
   };
 
   const handleCreateProject = () => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("organization_name");
+      localStorage.removeItem("project_name");
+      localStorage.setItem("onboarding_step", "1");
+    }
     router.push("/onboarding");
   };
 
@@ -98,9 +145,7 @@ export default function SelectProjectPage() {
                 </p>
               )}
             </div>
-
           </div>
-
 
           {err && (
             <div className="mb-4 border border-red-200 bg-red-50 text-red-700 text-sm px-3 py-2 rounded-lg">
@@ -114,7 +159,6 @@ export default function SelectProjectPage() {
               <p className="text-sm text-gray-600">Fetching your projects...</p>
             </div>
           )}
-
 
           {!loading && !hasProjects && !err && (
             <div className="flex flex-col items-center justify-center py-16">
@@ -138,58 +182,64 @@ export default function SelectProjectPage() {
             </div>
           )}
 
-
           {!loading && hasProjects && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {projects.map((p, idx) => (
-                <button
-                  key={`${p.org_id || "org"}-${p.project_id || idx}`}
-                  type="button"
-                  onClick={() => handleSelectProject(p)}
-                  className="group text-left bg-white border border-[#E0E7FF] rounded-xl p-4 hover:border-[#0D5DB8] hover:shadow-md transition flex flex-col gap-2"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-2">
-                      <div className="h-9 w-9 rounded-xl bg-[#E0ECFF] flex items-center justify-center text-[#0D5DB8]">
-                        🏷️
-                      </div>
-                      <div>
-                        <p className="text-xs uppercase tracking-wide text-gray-500">
-                          {p.org_id}
-                        </p>
-                        <p className="text-sm md:text-base font-semibold text-gray-900">
-                          {p.project_id}
-                        </p>
-                      </div>
-                    </div>
-                    {p.role && (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] bg-[#E0ECFF] text-[#0D5DB8] font-medium">
-                        {p.role}
-                      </span>
-                    )}
-                  </div>
+              {projects.map((p, idx) => {
+                const key = `${p.org_id || "org"}-${p.project_id || idx}`;
+                const isSelecting = selectingKey === key;
 
-                  <div className="flex items-center justify-between mt-2">
-                    <div className="flex flex-col text-[11px] text-gray-500">
-                      {p.org_id && (
-                        <span>
-                          Org ID: <span className="font-mono">{p.org_id}</span>
-                        </span>
-                      )}
-                      {p.project_id && (
-                        <span>
-                          Project ID:{" "}
-                          <span className="font-mono">{p.project_id}</span>
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => handleSelectProject(p)}
+                    className="group text-left bg-white border border-[#E0E7FF] rounded-xl p-4 hover:border-[#0D5DB8] hover:shadow-md transition flex flex-col gap-2 disabled:opacity-60"
+                    disabled={isSelecting}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <div className="h-9 w-9 rounded-xl bg-[#E0ECFF] flex items-center justify-center text-[#0D5DB8]">
+                          🏷️
+                        </div>
+                        <div>
+                          <p className="text-xs uppercase tracking-wide text-gray-500">
+                            {p.org_id}
+                          </p>
+                          <p className="text-sm md:text-base font-semibold text-gray-900">
+                            {p.project_id}
+                          </p>
+                        </div>
+                      </div>
+                      {p.role && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] bg-[#E0ECFF] text-[#0D5DB8] font-medium">
+                          {p.role}
                         </span>
                       )}
                     </div>
-                    <span className="inline-flex items-center text-xs font-semibold text-[#0D5DB8] group-hover:translate-x-0.5 transition-transform">
-                      Use this project
-                      <span className="ml-1">→</span>
-                    </span>
-                  </div>
-                </button>
-              ))}
+
+                    <div className="flex items-center justify-between mt-2">
+                      <div className="flex flex-col text-[11px] text-gray-500">
+                        {p.org_id && (
+                          <span>
+                            Org ID:{" "}
+                            <span className="font-mono">{p.org_id}</span>
+                          </span>
+                        )}
+                        {p.project_id && (
+                          <span>
+                            Project ID:{" "}
+                            <span className="font-mono">{p.project_id}</span>
+                          </span>
+                        )}
+                      </div>
+                      <span className="inline-flex items-center text-xs font-semibold text-[#0D5DB8] group-hover:translate-x-0.5 transition-transform">
+                        {isSelecting ? "Loading..." : "Use this project"}
+                        <span className="ml-1">→</span>
+                      </span>
+                    </div>
+                  </button>
+                );
+              })}
 
               {/* Extra card: Create new project */}
               <button

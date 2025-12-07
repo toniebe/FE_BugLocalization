@@ -15,7 +15,6 @@ import {
 export default function OnboardingPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
-
   const totalSteps = ONBOARDING_STEPS.length;
 
   // Step 1 state
@@ -48,16 +47,21 @@ export default function OnboardingPage() {
     mlStatus.import === "done" &&
     (mlStatus.stage === "COMPLETED" || mlStatus.stage === "completed");
 
-  // load org/project kalau sebelumnya sudah disimpan
   useEffect(() => {
     if (typeof window === "undefined") return;
     const org = localStorage.getItem("organization_name") || "";
     const proj = localStorage.getItem("project_name") || "";
-    if (org && proj) {
-      setOrgName(org);
-      setProjectName(proj);
+    const savedStep = parseInt(
+      localStorage.getItem("onboarding_step") || "1",
+      10
+    );
+
+    if (org) setOrgName(org);
+    if (proj) setProjectName(proj);
+    if (!isNaN(savedStep) && savedStep >= 1 && savedStep <= totalSteps) {
+      setStep(savedStep);
     }
-  }, []);
+  }, [totalSteps]);
 
   // =====================
   // STEP 1 – Create Project
