@@ -23,9 +23,11 @@ export async function GET(req) {
     );
   }
 
-  const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/user-projects?email=${encodeURIComponent(
+  const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/user/projects/?email=${encodeURIComponent(
     email
   )}`;
+
+  
 
   async function fetchWithRetry(attempt = 1) {
     const res = await fetch(apiUrl, {
