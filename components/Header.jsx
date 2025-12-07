@@ -1,3 +1,4 @@
+// components/Header.jsx (atau lokasi header kamu)
 "use client";
 
 import { logout } from "@/app/_lib/auth-client";
@@ -64,10 +65,7 @@ function Header() {
   // click outside untuk nutup dropdown
   useEffect(() => {
     function handleClickOutside(e) {
-      if (
-        projectBtnRef.current &&
-        !projectBtnRef.current.contains(e.target)
-      ) {
+      if (projectBtnRef.current && !projectBtnRef.current.contains(e.target)) {
         setProjectMenuOpen(false);
       }
       if (userBtnRef.current && !userBtnRef.current.contains(e.target)) {
@@ -83,11 +81,13 @@ function Header() {
   const handleLogout = async () => {
     try {
       await logout();
-      localStorage.removeItem("organization_name");
-      localStorage.removeItem("project_name");
-      localStorage.removeItem("org_id");
-      localStorage.removeItem("project_id");
-      localStorage.removeItem("user_email");
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("organization_name");
+        localStorage.removeItem("project_name");
+        localStorage.removeItem("org_id");
+        localStorage.removeItem("project_id");
+        localStorage.removeItem("user_email");
+      }
     } catch (e) {
       console.error("Logout error", e);
     } finally {
@@ -111,17 +111,16 @@ function Header() {
       }
     }
 
-    setCurrentOrg(p.org_id || "");
-    setCurrentProject(p.project_id || "");
+    setCurrentOrg(p.org_id || p.organization_name || "");
+    setCurrentProject(p.project_id || p.project_name || "");
     setProjectMenuOpen(false);
 
-    // arahkan ke home (atau refresh current page)
     router.push("/home");
   };
 
   const handleGoOnboarding = () => {
     setProjectMenuOpen(false);
-    router.push("/onboarding");
+    router.push("/select-project");
   };
 
   const projectLabel =
@@ -142,7 +141,7 @@ function Header() {
           <img src="/easyfix-logo.png" alt="EasyFix Logo" className="h-8" />
         </button>
 
-        {/* Nav */}
+        {/* Nav Desktop */}
         <nav className="hidden md:flex items-center gap-1">
           <button
             className="text-[#0D5DB8] font-medium px-3 py-2 text-sm rounded hover:bg-blue-50/60 transition"
@@ -184,6 +183,7 @@ function Header() {
           >
             Team
           </button>
+          {/* Tidak ada Project Manage di sini, sesuai permintaan */}
         </nav>
 
         {/* Right: Project dropdown + user dropdown */}
@@ -211,9 +211,7 @@ function Header() {
                     <p className="text-xs font-semibold text-[#0D5DB8]">
                       Projects
                     </p>
-                    <p className="text-[11px] text-gray-500">
-                      Switch projects
-                    </p>
+                    <p className="text-[11px] text-gray-500">Switch projects</p>
                   </div>
                 </div>
 
@@ -241,11 +239,13 @@ function Header() {
 
                   {projects.map((p, idx) => {
                     const isActive =
-                      p.org_id === currentOrg &&
-                      p.project_id === currentProject;
+                      (p.org_id || p.organization_name) === currentOrg &&
+                      (p.project_id || p.project_name) === currentProject;
                     return (
                       <button
-                        key={`${p.org_id || "org"}-${p.project_id || idx}`}
+                        key={`${p.org_id || p.organization_name || "org"}-${
+                          p.project_id || p.project_name || idx
+                        }`}
                         type="button"
                         onClick={() => handleSelectProject(p)}
                         className={`w-full text-left px-3 py-2 text-xs md:text-sm flex items-start justify-between gap-2 hover:bg-blue-50 transition ${
@@ -254,10 +254,10 @@ function Header() {
                       >
                         <div className="flex flex-col">
                           <span className="text-[11px] text-gray-500">
-                            {p.org_id || "Organization"}
+                            {p.org_id || p.organization_name || "Organization"}
                           </span>
                           <span className="font-semibold text-gray-900">
-                            {p.project_id || "Project"}
+                            {p.project_id || p.project_name || "Project"}
                           </span>
                           {p.role && (
                             <span className="mt-1 inline-flex items-center px-2 py-0.5 rounded-full bg-[#E0ECFF] text-[10px] text-[#0D5DB8] font-medium">
@@ -275,6 +275,15 @@ function Header() {
                   })}
                 </div>
 
+                <div className="border-t border-[#E5EDFF] px-3 py-2 bg-[#F9FBFF]">
+                  <button
+                    type="button"
+                    onClick={handleGoOnboarding}
+                    className="w-full text-left text-[11px] text-[#0D5DB8] font-semibold hover:underline"
+                  >
+                    Manage Project
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -286,14 +295,13 @@ function Header() {
               onClick={() => setUserMenuOpen((o) => !o)}
               className="w-9 h-9 rounded-full bg-gradient-to-br from-[#0D5DB8] to-[#4F8DFF] text-white flex items-center justify-center text-sm font-semibold shadow cursor-pointer"
             >
-              {/* Bisa diganti inisial user */}
-              U
+              {/* Bisa diganti inisial user */}U
             </button>
 
             {userMenuOpen && (
-              <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-md shadow-lg z-50">
+              <div className="absolute right-0 mt-2 w-44 bg-white border border-gray-200 rounded-md shadow-lg z-50 text-sm">
                 <button
-                  className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                  className="w-full text-left px-3 py-2 hover:bg-gray-100"
                   onClick={() => {
                     setUserMenuOpen(false);
                     router.push("/onboarding");
@@ -301,17 +309,10 @@ function Header() {
                 >
                   Create New Project
                 </button>
-                {/* <button
-                  className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
-                  onClick={() => {
-                    setUserMenuOpen(false);
-                    router.push("/team");
-                  }}
-                >
-                  Team
-                </button> */}
+
+
                 <button
-                  className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                  className="w-full text-left px-3 py-2 hover:bg-gray-100"
                   onClick={() => {
                     setUserMenuOpen(false);
                     router.push("/profile");
@@ -320,7 +321,7 @@ function Header() {
                   Edit Profile
                 </button>
                 <button
-                  className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-gray-100"
+                  className="w-full text-left px-3 py-2 text-red-600 hover:bg-gray-100"
                   onClick={() => {
                     setUserMenuOpen(false);
                     handleLogout();
