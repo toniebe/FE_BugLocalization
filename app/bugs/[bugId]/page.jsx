@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
 import LayoutCustom from "@/components/LayoutCustom";
 
 export default function BugDetailClient({ params }) {
-  const { bugId } = params;
+  const { bugId } = use(params);
   const router = useRouter();
 
   const [data, setData] = useState(null);
@@ -48,8 +48,7 @@ export default function BugDetailClient({ params }) {
         const json = await res.json();
         if (!cancelled) setData(json);
       } catch (e) {
-        if (!cancelled)
-          setErr(e?.message || "Failed to load bug detail");
+        if (!cancelled) setErr(e?.message || "Failed to load bug detail");
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -73,11 +72,7 @@ export default function BugDetailClient({ params }) {
       <section className="max-w-4xl mx-auto mt-6 p-6 bg-white rounded-lg border border-gray-200">
         {/* Header + Back button */}
         <div className="flex items-center justify-between mb-4 gap-3">
-         
-
-          <h1 className="text-xl font-semibold">
-            Bug Detail #{bugId}
-          </h1>
+          <h1 className="text-xl font-semibold">Bug Detail #{bugId}</h1>
         </div>
 
         {loading && <p className="text-sm text-gray-500">Loading…</p>}
@@ -92,9 +87,7 @@ export default function BugDetailClient({ params }) {
           <div className="space-y-4">
             {/* Judul & deskripsi */}
             <div>
-              <h2 className="text-lg font-medium mb-1">
-                {bug.summary}
-              </h2>
+              <h2 className="text-lg font-medium mb-1">{bug.summary}</h2>
               <p className="text-sm text-gray-700">
                 {bug.clean_text || "No description"}
               </p>
@@ -103,9 +96,7 @@ export default function BugDetailClient({ params }) {
             {/* Meta info */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
               <div>
-                <div className="font-semibold text-gray-700">
-                  Status
-                </div>
+                <div className="font-semibold text-gray-700">Status</div>
                 <div className="mt-1 inline-flex flex-wrap items-center gap-2">
                   <span className="inline-flex px-2 py-1 rounded bg-slate-100 text-xs text-slate-700">
                     {bug.status || "-"}
@@ -119,9 +110,7 @@ export default function BugDetailClient({ params }) {
               </div>
 
               <div>
-                <div className="font-semibold text-gray-700">
-                  Assigned To
-                </div>
+                <div className="font-semibold text-gray-700">Assigned To</div>
                 <div className="mt-1 text-gray-700">
                   {bug.assigned_to || dev?.dev_id || "-"}
                 </div>
@@ -134,18 +123,13 @@ export default function BugDetailClient({ params }) {
                 <div className="mt-1 text-gray-700">
                   {bug.product || "-"}
                   {bug.component && (
-                    <span className="text-gray-500">
-                      {" "}
-                      · {bug.component}
-                    </span>
+                    <span className="text-gray-500"> · {bug.component}</span>
                   )}
                 </div>
               </div>
 
               <div>
-                <div className="font-semibold text-gray-700">
-                  Topic
-                </div>
+                <div className="font-semibold text-gray-700">Topic</div>
                 <div className="mt-1 text-gray-700">
                   {bug.topic_label || "-"}
                   {bug.topic_score && (

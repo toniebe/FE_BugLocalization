@@ -35,7 +35,7 @@ export async function POST(req) {
     );
   }
 
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const idToken = cookieStore.get("id_token")?.value;
 
   if (!idToken) {
