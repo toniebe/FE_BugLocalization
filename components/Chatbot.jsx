@@ -7,7 +7,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_CHATBOT_API_BASE_URL || "http://loc
 export default function Chatbot() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
-    { role: "assistant", content: "Hi — Saya Asistan Virtual EasyFix. Tanyakan kepada saya apapun tentang EasyFix. \n\n Contoh : \n - Apa itu EasyFix? \n - Bagaimana cara Create Account? \n - Bagaimana cara mencari bug?" }
+    { role: "assistant", content: "Hi... Saya Asistan Virtual EasyFix. Tanyakan kepada saya apapun tentang EasyFix. \n\n Contoh : \n - Apa itu EasyFix? \n - Bagaimana cara Create Account? \n - Bagaimana cara mencari bug?" }
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -109,7 +109,7 @@ export default function Chatbot() {
           <form onSubmit={handleSend} className="border-t border-gray-200 p-2 flex gap-2">
             <input
               type="text"
-              placeholder="Ask about bugs, commits, developers..."
+              placeholder="Tanyakan tentang EasyFix, Cari Bug..."
               className="flex-1 px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#01559A] text-sm"
               value={input}
               onChange={(e) => setInput(e.target.value)}
