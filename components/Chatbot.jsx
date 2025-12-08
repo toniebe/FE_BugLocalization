@@ -72,7 +72,7 @@ export default function Chatbot() {
     <>
       <button
         onClick={toggleOpen}
-        className="fixed bottom-6 right-6 z-50 rounded-full px-4 py-3 bg-[#01559A] text-white shadow-lg hover:bg-[#01447A] transition-colors"
+        className="fixed bottom-6 right-6 z-50 rounded-full px-4 py-3 bg-[#017fe6] text-white shadow-lg hover:bg-[#01447A] transition-colors"
       >
         {isOpen ? "Close Chat" : "ChatBot EasyFix"}
       </button>
