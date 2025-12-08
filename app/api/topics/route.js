@@ -2,7 +2,8 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 
 export const dynamic = "force-dynamic";
 
@@ -20,8 +21,8 @@ export async function GET(req) {
       { status: 400 }
     );
   }
-
-  const token = cookies().get("id_token")?.value;
+  const cookieStore = await cookies();
+  const token = cookieStore.get("id_token")?.value;
 
   const qs = new URLSearchParams({
     organization_name,
@@ -30,13 +31,16 @@ export async function GET(req) {
     offset,
   });
 
-  const res = await fetch(`${API_BASE}/api/topics/{organization}/{project}/?${qs.toString()}`, {
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    cache: "no-store",
-  });
+  const res = await fetch(
+    `${API_BASE}/api/topics/{organization}/{project}/?${qs.toString()}`,
+    {
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      cache: "no-store",
+    }
+  );
 
   const data = await res.json();
   return NextResponse.json(data, { status: res.status });

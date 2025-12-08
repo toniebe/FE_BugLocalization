@@ -72,7 +72,7 @@ export default function Chatbot() {
     <>
       <button
         onClick={toggleOpen}
-        className="fixed bottom-6 right-6 z-50 rounded-full px-4 py-3 bg-blue-600 text-white shadow-lg hover:bg-blue-700 transition-colors"
+        className="fixed bottom-6 right-6 z-50 rounded-full px-4 py-3 bg-[#01559A] text-white shadow-lg hover:bg-[#01447A] transition-colors"
       >
         {isOpen ? "Close Chat" : "ChatBot EasyFix"}
       </button>
@@ -89,7 +89,7 @@ export default function Chatbot() {
               <div key={idx} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`} style={{ whiteSpace: 'pre-line' }}>
                 <div className={`max-w-[80%] rounded-lg px-3 py-2 ${
                   m.role === "user"
-                    ? "bg-blue-600 text-white"
+                    ? "bg-[#01559A] text-white"
                     : "bg-white text-gray-900 border border-gray-200"
                 }`}>
                   {m.content}
@@ -110,14 +110,14 @@ export default function Chatbot() {
             <input
               type="text"
               placeholder="Ask about bugs, commits, developers..."
-              className="flex-1 px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm"
+              className="flex-1 px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#01559A] text-sm"
               value={input}
               onChange={(e) => setInput(e.target.value)}
             />
             <button
               type="submit"
               disabled={isLoading || !input.trim()}
-              className="px-3 py-1 rounded-md bg-blue-600 text-white disabled:opacity-60 disabled:cursor-not-allowed text-sm"
+              className="px-3 py-1 rounded-md bg-[#01559A] text-white disabled:opacity-60 disabled:cursor-not-allowed text-sm"
             >
               Send
             </button>
