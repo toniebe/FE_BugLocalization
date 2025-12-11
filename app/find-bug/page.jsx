@@ -143,7 +143,7 @@ export default function SearchClient() {
         organization: orgName,
         project: projectName,
         bug_id: bug.bug_id,
-        topic_id: bug.topic_id || bug.primary_topic_id || "",
+        topic_id: bug.topic_id || "",
         query: data?.query || q || "",
         is_relevant: isRelevant,
       });

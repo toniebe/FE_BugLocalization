@@ -25,7 +25,6 @@ export default function LoginClient({ nextUrl = "/home" }) {
         localStorage.setItem("user_email", email);
       }
 
-      console.log("Login successful:", data);
       router.push("/select-project");
     } catch (err) {
       console.error("Login error:", err);

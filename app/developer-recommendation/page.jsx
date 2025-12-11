@@ -126,7 +126,6 @@ export default function DeveloperRecommendationPage() {
       }
 
       const json = await res.json();
-      console.log("LTR RESPONSE:", json);
       if (!res.ok || json?.error || json?.detail) {
         throw new Error(
           json.error || json.detail || "Failed to get recommendations"
@@ -143,18 +142,39 @@ export default function DeveloperRecommendationPage() {
     }
   };
 
+  // Untuk normalisasi score ke progress bar
+  const maxScore =
+    recommendations.length > 0
+      ? Math.max(
+          ...recommendations.map((d) =>
+            typeof d.score === "number" ? d.score : 0
+          )
+        ) || 1
+      : 1;
+
+  const getRecencyLabel = (days) => {
+    if (days === 9999 || days === null || days === undefined) {
+      return "Not recent / unknown";
+    }
+    if (days === 0) return "Today";
+    if (days <= 7) return `${days} days (this week)`;
+    if (days <= 30) return `${days} days (this month)`;
+    return `${days} days ago`;
+  };
+
   return (
     <LayoutCustom>
       <main className="min-h-screen bg-white px-4 py-8">
-        <div className="max-w-5xl mx-auto space-y-8">
+        <div className="max-w-6xl mx-auto space-y-8">
           <header className="space-y-2">
             <h1 className="text-3xl font-bold text-[#01559A]">
               Developer Recommendation (Learning-to-Rank)
             </h1>
             <p className="text-gray-700">
-              This page uses a Learning-to-Rank model to recommend developers
-              based on bug data in EasyFix. You can search by <b>Bug ID</b> or{" "}
-              <b>Bug Summary</b>.
+              This page uses a Learning-to-Rank (LTR) model to recommend
+              developers based on historical bug-fixing data in EasyFix. You can
+              search by <b>Bug ID</b> or <b>Bug Summary</b>, then see ranked
+              candidates with experience signals.
             </p>
           </header>
 
@@ -190,23 +210,28 @@ export default function DeveloperRecommendationPage() {
               </div>
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              These values are automatically loaded from{" "}
-              <code>localStorage</code> if available (
-              <code>organization_name</code> &amp;{" "}
-              <code>project_name</code>), but can still be edited manually.
+              Automatically loaded from <code>localStorage</code> (
+              <code>organization_name</code> &amp; <code>project_name</code>),
+              but can be edited manually.
             </p>
           </section>
 
           {/* Train Section */}
-          <section className="border rounded-lg p-4 space-y-3">
-            <div className="flex items-center justify-between gap-3">
-              <h2 className="text-lg font-semibold text-[#01559A]">
-                1. Train LTR Model
-              </h2>
+          <section className="border rounded-lg p-4 space-y-4">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-semibold text-[#01559A]">
+                  1. Train LTR Model
+                </h2>
+                <p className="text-sm text-gray-600">
+                  Train or refresh the ranking model using the latest bug
+                  history stored in Neo4j.
+                </p>
+              </div>
               <button
                 onClick={handleTrain}
                 disabled={loadingTrain}
-                className={`px-4 py-2 rounded text-sm font-medium text-white ${
+                className={`px-4 py-2 rounded-lg text-sm font-medium text-white shadow-sm ${
                   loadingTrain
                     ? "bg-gray-400"
                     : "bg-[#01559A] hover:bg-[#0468ba]"
@@ -215,19 +240,135 @@ export default function DeveloperRecommendationPage() {
                 {loadingTrain ? "Training..." : "Train Model"}
               </button>
             </div>
-            <p className="text-sm text-gray-700">
-              This button will call the endpoint:
-              <br />
-              <code className="text-xs bg-gray-100 px-2 py-1 rounded">
-                POST /api/ltr/&lt;org&gt;/&lt;project&gt;/train?force_retrain=false
+
+            <p className="text-xs text-gray-500">
+              Endpoint:{" "}
+              <code className="bg-gray-100 px-2 py-1 rounded">
+                POST
+                /api/ltr/&lt;org&gt;/&lt;project&gt;/train?force_retrain=false
               </code>
             </p>
 
+            {/* Pretty train result */}
             {trainResult && (
-              <div className="mt-3 p-3 rounded bg-green-50 border border-green-200 text-sm text-green-800">
-                <pre className="whitespace-pre-wrap break-all text-xs">
-                  {JSON.stringify(trainResult, null, 2)}
-                </pre>
+              <div className="mt-3 space-y-4">
+                {/* Top summary cards */}
+                <div className="grid gap-3 md:grid-cols-4">
+                  <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">
+                    <div className="text-[10px] uppercase tracking-wide text-blue-500">
+                      Model status
+                    </div>
+                    <div className="mt-1 text-sm font-semibold text-blue-900">
+                      {trainResult.status || "Trained"}
+                    </div>
+                    <div className="mt-1 text-[11px] text-blue-700">
+                      {trainResult.model_path?.split("/").pop() ||
+                        "LTR model file"}
+                    </div>
+                  </div>
+                  <div className="bg-slate-50 border border-slate-100 rounded-lg p-3">
+                    <div className="text-[10px] uppercase tracking-wide text-slate-500">
+                      Training bugs
+                    </div>
+                    <div className="mt-1 text-xl font-semibold text-slate-900">
+                      {trainResult.num_training_bugs ?? "-"}
+                    </div>
+                    <div className="mt-1 text-[11px] text-slate-600">
+                      Used for learning ranking patterns.
+                    </div>
+                  </div>
+                  <div className="bg-slate-50 border border-slate-100 rounded-lg p-3">
+                    <div className="text-[10px] uppercase tracking-wide text-slate-500">
+                      Test bugs
+                    </div>
+                    <div className="mt-1 text-xl font-semibold text-slate-900">
+                      {trainResult.num_test_bugs ?? "-"}
+                    </div>
+                    <div className="mt-1 text-[11px] text-slate-600">
+                      Held-out for evaluation.
+                    </div>
+                  </div>
+                  <div className="bg-slate-50 border border-slate-100 rounded-lg p-3">
+                    <div className="text-[10px] uppercase tracking-wide text-slate-500">
+                      Dataset rows
+                    </div>
+                    <div className="mt-1 text-xl font-semibold text-slate-900">
+                      {trainResult.rows ?? "-"}
+                    </div>
+                    <div className="mt-1 text-[11px] text-slate-600">
+                      Bug–developer pairs.
+                    </div>
+                  </div>
+                </div>
+
+                {/* Metrics */}
+                <div className="space-y-2">
+                  <h3 className="text-sm font-semibold text-[#01559A]">
+                    Evaluation Metrics
+                  </h3>
+                  <div className="grid gap-3 md:grid-cols-5">
+                    <MetricCard
+                      label="MAP"
+                      value={trainResult.eval_metrics?.map}
+                      tooltip={trainResult.metric_definitions?.MAP}
+                    />
+                    <MetricCard
+                      label="NDCG@1"
+                      value={trainResult.eval_metrics?.["ndcg@1"]}
+                      tooltip={trainResult.metric_definitions?.["NDCG@k"]}
+                    />
+                    <MetricCard
+                      label="Precision@1"
+                      value={trainResult.eval_metrics?.["precision@1"]}
+                      tooltip={trainResult.metric_definitions?.["Precision@k"]}
+                    />
+                    <MetricCard
+                      label="NDCG@3"
+                      value={trainResult.eval_metrics?.["ndcg@3"]}
+                      tooltip={trainResult.metric_definitions?.["NDCG@k"]}
+                    />
+                    <MetricCard
+                      label="NDCG@5"
+                      value={trainResult.eval_metrics?.["ndcg@5"]}
+                      tooltip={trainResult.metric_definitions?.["NDCG@k"]}
+                    />
+                  </div>
+                  {trainResult.eval_explanation && (
+                    <p className="text-xs text-gray-600 bg-gray-50 border border-gray-100 rounded-md p-2">
+                      {trainResult.eval_explanation}
+                    </p>
+                  )}
+                </div>
+
+                {/* Features chips */}
+                {Array.isArray(trainResult.features) &&
+                  trainResult.features.length > 0 && (
+                    <div className="space-y-1">
+                      <h3 className="text-sm font-semibold text-[#01559A]">
+                        Features used by the model
+                      </h3>
+                      <div className="flex flex-wrap gap-1.5">
+                        {trainResult.features.map((f) => (
+                          <span
+                            key={f}
+                            className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] text-slate-700"
+                          >
+                            {f}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                {/* Raw JSON collapsible (debug) */}
+                <details className="mt-2 text-xs">
+                  <summary className="cursor-pointer text-gray-500 hover:text-gray-700">
+                    Show raw JSON payload
+                  </summary>
+                  <pre className="mt-2 whitespace-pre-wrap break-all bg-gray-900 text-gray-100 p-3 rounded-md text-[10px] overflow-x-auto">
+                    {JSON.stringify(trainResult, null, 2)}
+                  </pre>
+                </details>
               </div>
             )}
           </section>
@@ -235,18 +376,24 @@ export default function DeveloperRecommendationPage() {
           {/* Recommendation Section */}
           <section className="border rounded-lg p-4 space-y-4">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-              <h2 className="text-lg font-semibold text-[#01559A]">
-                2. Get Recommended Developers
-              </h2>
+              <div>
+                <h2 className="text-lg font-semibold text-[#01559A]">
+                  2. Get Recommended Developers
+                </h2>
+                <p className="text-sm text-gray-600">
+                  Search by Bug ID or paste a short summary. The model will rank
+                  developers by their relevance and experience.
+                </p>
+              </div>
 
               {/* Toggle mode Bug ID / Summary */}
-              <div className="inline-flex rounded-lg border border-gray-200 bg-white p-1">
+              <div className="inline-flex rounded-full border border-gray-200 bg-white p-1">
                 <button
                   type="button"
                   onClick={() => setMode("id")}
-                  className={`px-3 py-1 text-xs md:text-sm font-medium rounded-md ${
+                  className={`px-3 py-1 text-xs md:text-sm font-medium rounded-full ${
                     mode === "id"
-                      ? "bg-[#01559A] text-white"
+                      ? "bg-[#01559A] text-white shadow-sm"
                       : "text-[#01559A] hover:bg-gray-50"
                   }`}
                 >
@@ -255,9 +402,9 @@ export default function DeveloperRecommendationPage() {
                 <button
                   type="button"
                   onClick={() => setMode("summary")}
-                  className={`px-3 py-1 text-xs md:text-sm font-medium rounded-md ml-1 ${
+                  className={`px-3 py-1 text-xs md:text-sm font-medium rounded-full ml-1 ${
                     mode === "summary"
-                      ? "bg-[#01559A] text-white"
+                      ? "bg-[#01559A] text-white shadow-sm"
                       : "text-[#01559A] hover:bg-gray-50"
                   }`}
                 >
@@ -309,9 +456,9 @@ export default function DeveloperRecommendationPage() {
                     placeholder="Example: DevTools inspector does not show text when editing DOM in Firefox Nightly..."
                   />
                   <p className="mt-1 text-xs text-gray-500">
-                    The summary will be used to find a relevant topic and then
-                    recommend developers. The <code>component</code> field from
-                    FE is automatically sent as empty.
+                    The summary will be embedded into a topic, then used to rank
+                    developers. The <code>component</code> field from FE is
+                    currently sent as empty.
                   </p>
                 </div>
                 <div className="max-w-xs">
@@ -333,7 +480,7 @@ export default function DeveloperRecommendationPage() {
             <button
               onClick={handleRecommend}
               disabled={loadingRecommend}
-              className={`mt-2 px-4 py-2 rounded text-sm font-medium text-white ${
+              className={`mt-2 px-4 py-2 rounded-lg text-sm font-medium text-white shadow-sm ${
                 loadingRecommend
                   ? "bg-gray-400"
                   : "bg-[#01559A] hover:bg-[#0468ba]"
@@ -344,83 +491,128 @@ export default function DeveloperRecommendationPage() {
 
             {/* Meta summary from backend */}
             {recMeta && (
-              <div className="mt-3 text-xs text-gray-700 space-y-1">
-                <div>
-                  <span className="font-semibold">Bug ID:</span>{" "}
-                  {recMeta.bug_id || (mode === "id" ? bugId : "-")}
-                </div>
-                {recMeta.topic_id && (
+              <div className="mt-3 text-xs text-gray-700 space-y-1 bg-gray-50 border border-gray-100 rounded-md p-2">
+                <div className="flex flex-wrap gap-x-6 gap-y-1">
                   <div>
-                    <span className="font-semibold">Topic ID:</span>{" "}
-                    {recMeta.topic_id}
+                    <span className="font-semibold">Bug ID:</span>{" "}
+                    {recMeta.bug_id || (mode === "id" ? bugId : "-")}
                   </div>
-                )}
-                {typeof recMeta.total_candidates === "number" && (
-                  <div>
-                    <span className="font-semibold">Total Candidates:</span>{" "}
-                    {recMeta.total_candidates}
+                  {recMeta.topic_id && (
+                    <div>
+                      <span className="font-semibold">Topic ID:</span>{" "}
+                      {recMeta.topic_id}
+                    </div>
+                  )}
+                  {typeof recMeta.total_candidates === "number" && (
+                    <div>
+                      <span className="font-semibold">Total Candidates:</span>{" "}
+                      {recMeta.total_candidates}
+                    </div>
+                  )}
+                </div>
+                {recMeta.bug_summary && (
+                  <div className="mt-1 text-[11px] text-gray-600">
+                    <span className="font-semibold">Bug summary:</span>{" "}
+                    {recMeta.bug_summary}
                   </div>
                 )}
               </div>
             )}
 
-            {/* Recommendation table */}
+            {/* Recommendation cards */}
             {recommendations.length > 0 && (
-              <div className="mt-4 overflow-x-auto">
-                <table className="min-w-full text-sm border border-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-3 py-2 border-b text-left">#</th>
-                      <th className="px-3 py-2 border-b text-left">
-                        Developer (Email / ID)
-                      </th>
-                      <th className="px-3 py-2 border-b text-left">
-                        Bugs Fixed (Total)
-                      </th>
-                      <th className="px-3 py-2 border-b text-left">
-                        Bugs Fixed (Same Topic)
-                      </th>
-                      <th className="px-3 py-2 border-b text-left">Recency</th>
-                      <th className="px-3 py-2 border-b text-left">Score</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {recommendations.map((dev, idx) => {
-                      const recentLabel =
-                        dev.recent_days === 9999 ||
-                        dev.recent_days === null ||
-                        dev.recent_days === undefined
-                          ? "Not recent / unknown"
-                          : `${dev.recent_days} days`;
+              <div className="mt-4 space-y-3">
+                <h3 className="text-sm font-semibold text-[#01559A]">
+                  Top {recommendations.length} recommended developers
+                </h3>
+                <div className="grid gap-3 md:grid-cols-2">
+                  {recommendations.map((dev, idx) => {
+                    const recentLabel = getRecencyLabel(dev.recent_days);
+                    const score = typeof dev.score === "number" ? dev.score : 0;
+                    const scorePct = Math.round((score / maxScore) * 100);
 
-                      return (
-                        <tr
-                          key={dev.developer_id || idx}
-                          className="hover:bg-gray-50"
-                        >
-                          <td className="px-3 py-2 border-b">{idx + 1}</td>
-                          <td className="px-3 py-2 border-b font-medium text-gray-900">
-                            {dev.developer_id || "-"}
-                          </td>
-                          <td className="px-3 py-2 border-b text-gray-700">
-                            {dev.bugs_fixed_total ?? "-"}
-                          </td>
-                          <td className="px-3 py-2 border-b text-gray-700">
-                            {dev.bugs_fixed_topic ?? "-"}
-                          </td>
-                          <td className="px-3 py-2 border-b text-gray-700">
-                            {recentLabel}
-                          </td>
-                          <td className="px-3 py-2 border-b text-gray-700">
-                            {typeof dev.score === "number"
-                              ? dev.score.toFixed(4)
-                              : "-"}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                    return (
+                      <div
+                        key={dev.developer_id || idx}
+                        className="relative rounded-xl border border-gray-200 bg-white p-4 shadow-sm hover:shadow-md transition-shadow"
+                      >
+                        {/* Rank badge */}
+                        <div className="absolute -top-3 left-4">
+                          <span
+                            className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                              idx === 0
+                                ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
+                                : "bg-slate-100 text-slate-600 border border-slate-200"
+                            }`}
+                          >
+                            #{idx + 1}{" "}
+                            {idx === 0 && (
+                              <span className="ml-1 hidden sm:inline">
+                                · Best match
+                              </span>
+                            )}
+                          </span>
+                        </div>
+
+                        <div className="mt-1 space-y-2">
+                          <div>
+                            <div className="text-xs font-semibold text-gray-500">
+                              Developer
+                            </div>
+                            <div className="text-sm font-semibold text-gray-900 break-all">
+                              {dev.developer_id || "-"}
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-3 gap-2 text-xs">
+                            <div className="bg-slate-50 rounded-lg p-2">
+                              <div className="text-[10px] text-slate-500">
+                                Bugs fixed (total)
+                              </div>
+                              <div className="text-sm font-semibold text-slate-900">
+                                {dev.bugs_fixed_total ?? "-"}
+                              </div>
+                            </div>
+                            <div className="bg-slate-50 rounded-lg p-2">
+                              <div className="text-[10px] text-slate-500">
+                                Bugs fixed (topic)
+                              </div>
+                              <div className="text-sm font-semibold text-slate-900">
+                                {dev.bugs_fixed_topic ?? "-"}
+                              </div>
+                            </div>
+                            <div className="bg-slate-50 rounded-lg p-2">
+                              <div className="text-[10px] text-slate-500">
+                                Recency
+                              </div>
+                              <div className="text-[11px] text-slate-900">
+                                {recentLabel}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Score bar */}
+                          <div className="space-y-1">
+                            <div className="flex items-center justify-between text-[11px] text-gray-600">
+                              <span>LTR score</span>
+                              <span className="font-mono">
+                                {score.toFixed(4)}
+                              </span>
+                            </div>
+                            <div className="h-2 w-full rounded-full bg-gray-100 overflow-hidden">
+                              <div
+                                className={`h-full rounded-full ${
+                                  idx === 0 ? "bg-emerald-500" : "bg-[#01559A]"
+                                }`}
+                                style={{ width: `${scorePct}%` }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
 
@@ -440,5 +632,26 @@ export default function DeveloperRecommendationPage() {
         </div>
       </main>
     </LayoutCustom>
+  );
+}
+
+/**
+ * Small card for metrics
+ */
+function MetricCard({ label, value, tooltip }) {
+  const display =
+    typeof value === "number"
+      ? value.toFixed(3).replace(/0+$/, "").replace(/\.$/, "")
+      : "-";
+  return (
+    <div className="bg-white border border-gray-100 rounded-lg p-3 shadow-[0_1px_2px_rgba(15,23,42,0.06)]">
+      <div className="flex items-center justify-between gap-1">
+        <div className="text-[11px] font-medium text-gray-500">{label}</div>
+      </div>
+      <div className="mt-1 text-lg font-semibold text-gray-900">{display}</div>
+      {tooltip && (
+        <p className="mt-1 text-[10px] text-gray-500 line-clamp-3">{tooltip}</p>
+      )}
+    </div>
   );
 }
