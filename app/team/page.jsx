@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import LayoutCustom from "@/components/LayoutCustom";
 
-
 export default function TeamPage() {
   const [members, setMembers] = useState([]);
   const [membersLoading, setMembersLoading] = useState(false);
@@ -13,21 +12,26 @@ export default function TeamPage() {
   const [role, setRole] = useState("member");
   const [orgId, setOrgId] = useState("");
   const [projectId, setProjectId] = useState("");
-  const [loading, setLoading] = useState(false); 
+  const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");
-  const [error, setError] = useState(""); 
+  const [error, setError] = useState("");
 
+  // --- state tambahan untuk evaluasi LDA ---
+  const [ldaEval, setLdaEval] = useState(null);
+  const [ldaLoading, setLdaLoading] = useState(false);
+  const [ldaError, setLdaError] = useState("");
+  const [selectedTopic, setSelectedTopic] = useState(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
 
     const org =
-      localStorage.getItem("org_id") ||
       localStorage.getItem("organization_name") ||
+      localStorage.getItem("org_id") ||
       "";
     const proj =
-      localStorage.getItem("project_id") ||
       localStorage.getItem("project_name") ||
+      localStorage.getItem("project_id") ||
       "";
 
     setOrgId(org);
@@ -61,17 +65,8 @@ export default function TeamPage() {
             data?.detail || data?.error || "Failed to fetch project members"
           );
         }
-
-        // data bentuknya:
-        // {
-        //   organization: "neo",
-        //   project: "4j",
-        //   count: 0,
-        //   members: [ { uid, email, display_name, roles, primary_role, projects } ]
-        // }
         const membersFromApi = Array.isArray(data.members) ? data.members : [];
 
-        // Normalisasi ke bentuk { email, role }
         const normalized = membersFromApi.map((m) => ({
           email: m.email || "",
           role: m.primary_role || "member",
@@ -152,6 +147,66 @@ export default function TeamPage() {
       setLoading(false);
     }
   };
+
+  // --- handler evaluasi LDA ---
+  const handleEvaluateLda = async () => {
+    setLdaError("");
+    setLdaEval(null);
+
+    if (!orgId || !projectId) {
+      setLdaError("Organization & project are not set.");
+      return;
+    }
+
+    try {
+      setLdaLoading(true);
+
+      const res = await fetch(
+        `/api/ml/lda/${encodeURIComponent(orgId)}/${encodeURIComponent(
+          projectId
+        )}/evaluate?organization=${encodeURIComponent(
+          orgId
+        )}&project=${encodeURIComponent(projectId)}`,
+        {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+          },
+          cache: "no-store",
+        }
+      );
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        throw new Error(data.detail || data.error || "Failed to evaluate LDA");
+      }
+
+      setLdaEval(data);
+      // otomatis pilih topik pertama
+      const topicKeys = Object.keys(data.top_keywords || {});
+      if (topicKeys.length > 0) {
+        setSelectedTopic(topicKeys[0]);
+      } else {
+        setSelectedTopic(null);
+      }
+    } catch (err) {
+      console.error("LDA evaluate error:", err);
+      setLdaError(err.message || "Failed to evaluate LDA model");
+    } finally {
+      setLdaLoading(false);
+    }
+  };
+
+  const topicKeys = ldaEval ? Object.keys(ldaEval.top_keywords || {}) : [];
+  const keywordsForSelectedTopic =
+    ldaEval && selectedTopic ? ldaEval.top_keywords?.[selectedTopic] || [] : [];
+
+  const coherence = ldaEval?.metrics?.coherence_score;
+  const coherenceType = ldaEval?.metrics?.coherence_type;
+  const logPerplexity = ldaEval?.metrics?.log_perplexity;
+  const numTopics = ldaEval?.num_topics;
+  const numDocs = ldaEval?.num_documents;
 
   return (
     <LayoutCustom>
@@ -317,6 +372,189 @@ export default function TeamPage() {
               </p>
             )}
           </div>
+        </div>
+
+        {/* --- SECTION BARU: Topic Model Evaluation (LDA) --- */}
+        <div className="mt-8 bg-white rounded-xl border border-[#e4e4e4] shadow-sm p-4 md:p-5 space-y-4">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div>
+              <h2 className="text-sm md:text-base font-semibold text-gray-800 flex items-center gap-2">
+                <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-blue-50 text-[#0D5DB8] text-base">
+                  📊
+                </span>
+                Topic Model Evaluation (LDA)
+              </h2>
+              <p className="text-xs md:text-sm text-gray-500 mt-1">
+                See how well the topic model summarizes your project bugs:
+                coherence, perplexity, and top keywords per topic.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleEvaluateLda}
+              disabled={ldaLoading || !orgId || !projectId}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-md text-xs md:text-sm font-medium text-white bg-[#0D5DB8] hover:bg-[#0b51aa] disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
+            >
+              {ldaLoading && (
+                <span className="h-3 w-3 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+              )}
+              <span>{ldaLoading ? "Evaluating…" : "Evaluate topic model"}</span>
+            </button>
+          </div>
+
+          {!orgId || !projectId ? (
+            <p className="text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-md px-3 py-2">
+              Select an active project first to run LDA evaluation.
+            </p>
+          ) : null}
+
+          {ldaError && (
+            <p className="text-xs text-red-700 bg-red-50 border border-red-100 rounded-md px-3 py-2">
+              {ldaError}
+            </p>
+          )}
+
+          {ldaEval && (
+            <div className="space-y-4">
+              {/* Top-level metrics */}
+              <div className="grid gap-3 md:grid-cols-4">
+                <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">
+                  <div className="text-[10px] uppercase tracking-wide text-[#0D5DB8]">
+                    Coherence ({coherenceType || "c_v"})
+                  </div>
+                  <div className="mt-1 text-lg font-semibold text-[#0D5DB8]">
+                    {typeof coherence === "number" ? coherence.toFixed(3) : "-"}
+                  </div>
+                  <p className="mt-1 text-[11px] text-[#0D5DB8]">
+                    {ldaEval.explanations?.coherence_score}
+                  </p>
+                </div>
+                <div className="bg-slate-50 border border-slate-100 rounded-lg p-3">
+                  <div className="text-[10px] uppercase tracking-wide text-slate-600">
+                    Log-perplexity
+                  </div>
+                  <div className="mt-1 text-lg font-semibold text-slate-900">
+                    {typeof logPerplexity === "number"
+                      ? logPerplexity.toFixed(3)
+                      : "-"}
+                  </div>
+                  <p className="mt-1 text-[11px] text-slate-600">
+                    {ldaEval.explanations?.log_perplexity}
+                  </p>
+                </div>
+                <div className="bg-slate-50 border border-slate-100 rounded-lg p-3">
+                  <div className="text-[10px] uppercase tracking-wide text-slate-600">
+                    Number of topics
+                  </div>
+                  <div className="mt-1 text-lg font-semibold text-slate-900">
+                    {numTopics ?? "-"}
+                  </div>
+                  <p className="mt-1 text-[11px] text-slate-600">
+                    {ldaEval.explanations?.num_topics}
+                  </p>
+                </div>
+                <div className="bg-slate-50 border border-slate-100 rounded-lg p-3">
+                  <div className="text-[10px] uppercase tracking-wide text-slate-600">
+                    Documents (bugs)
+                  </div>
+                  <div className="mt-1 text-lg font-semibold text-slate-900">
+                    {numDocs ?? "-"}
+                  </div>
+                  <p className="mt-1 text-[11px] text-slate-600">
+                    Topic matrix shape:{" "}
+                    <span className="font-mono">
+                      ({numDocs ?? "?"} × {numTopics ?? "?"})
+                    </span>
+                  </p>
+                </div>
+              </div>
+
+              {/* Topics & keywords */}
+              {topicKeys.length > 0 && (
+                <div className="grid gap-4 md:grid-cols-3">
+                  <div className="md:col-span-1 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-xs font-semibold text-gray-700">
+                        Topics
+                      </h3>
+                      <span className="text-[10px] text-gray-500">
+                        {topicKeys.length} topics
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-2 max-h-48 overflow-auto pr-1">
+                      {topicKeys.map((tKey) => (
+                        <button
+                          key={tKey}
+                          type="button"
+                          onClick={() => setSelectedTopic(tKey)}
+                          className={`text-[11px] px-2 py-1 rounded-full border ${
+                            selectedTopic === tKey
+                              ? "bg-blue-600 text-white border-blue-600"
+                              : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100"
+                          }`}
+                        >
+                          {tKey.replace("topic_", "Topic ")}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="md:col-span-2 space-y-2">
+                    <h3 className="text-xs font-semibold text-gray-700">
+                      Top keywords for{" "}
+                      {selectedTopic
+                        ? selectedTopic.replace("topic_", "Topic ")
+                        : "–"}
+                    </h3>
+                    {keywordsForSelectedTopic.length === 0 ? (
+                      <p className="text-xs text-gray-500">
+                        Select a topic to see its keywords.
+                      </p>
+                    ) : (
+                      <div className="flex flex-wrap gap-1.5">
+                        {keywordsForSelectedTopic.map((kw) => (
+                          <span
+                            key={kw}
+                            className="inline-flex items-center rounded-full bg-gray-50 border border-gray-200 px-2 py-0.5 text-[11px] text-gray-700"
+                          >
+                            {kw}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {ldaEval.explanations?.top_keywords && (
+                      <p className="mt-1 text-[11px] text-gray-500">
+                        {ldaEval.explanations.top_keywords}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Artefak path (optional, buat power user) */}
+              <details className="mt-2 text-xs">
+                <summary className="cursor-pointer text-gray-500 hover:text-gray-700">
+                  Show artifact paths (bugs_clean.csv, lda_model.gensim, ...)
+                </summary>
+                <div className="mt-2 grid gap-2 md:grid-cols-2">
+                  {Object.entries(ldaEval.artifacts || {}).map(([key, val]) => (
+                    <div
+                      key={key}
+                      className="bg-gray-50 border border-gray-100 rounded-md p-2"
+                    >
+                      <div className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">
+                        {key}
+                      </div>
+                      <div className="mt-1 text-[11px] font-mono text-gray-700 break-all">
+                        {val || "-"}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </details>
+            </div>
+          )}
         </div>
       </div>
     </LayoutCustom>
