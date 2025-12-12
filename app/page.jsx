@@ -149,7 +149,7 @@ export default function Home() {
               <button
                 type="button"
                 onClick={() => setShowChatbot((v) => !v)}
-                className="inline-flex items-center justify-center rounded-lg px-6 py-3 text-base sm:text-lg font-medium text-white border border-white hover:bg-[#01559A]/5 transition"
+                className="inline-flex items-center justify-center rounded-lg px-6 py-3 text-base sm:text-lg font-medium text-[#01559A] border border-[#01559A] hover:bg-[#01559A]/5 transition"
               >
                 {"Open AI Assistant"}
               </button>

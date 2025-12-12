@@ -24,6 +24,9 @@ export default function DeveloperRecommendationPage() {
 
   const [error, setError] = useState("");
 
+  // new: view mode untuk rekomendasi: "cards" | "table"
+  const [viewMode, setViewMode] = useState("table");
+
   // Get organization & project from localStorage on client mount
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -51,7 +54,7 @@ export default function DeveloperRecommendationPage() {
       const res = await fetch(
         `/api/ltr/${encodeURIComponent(organization)}/${encodeURIComponent(
           project
-        )}/train?force_retrain=false`,
+        )}/train?force_retrain=true`,
         {
           method: "POST",
         }
@@ -134,6 +137,7 @@ export default function DeveloperRecommendationPage() {
 
       setRecommendations(json.recommended_developers || []);
       setRecMeta(json);
+      setViewMode("table");
     } catch (err) {
       console.error("Recommend error:", err);
       setError(err.message || "Failed to fetch developer recommendations");
@@ -142,7 +146,7 @@ export default function DeveloperRecommendationPage() {
     }
   };
 
-  // Untuk normalisasi score ke progress bar
+  // Untuk normalisasi score (kalau mau dipakai bar kecil)
   const maxScore =
     recommendations.length > 0
       ? Math.max(
@@ -151,16 +155,6 @@ export default function DeveloperRecommendationPage() {
           )
         ) || 1
       : 1;
-
-  const getRecencyLabel = (days) => {
-    if (days === 9999 || days === null || days === undefined) {
-      return "Not recent / unknown";
-    }
-    if (days === 0) return "Today";
-    if (days <= 7) return `${days} days (this week)`;
-    if (days <= 30) return `${days} days (this month)`;
-    return `${days} days ago`;
-  };
 
   return (
     <LayoutCustom>
@@ -241,14 +235,7 @@ export default function DeveloperRecommendationPage() {
               </button>
             </div>
 
-            <p className="text-xs text-gray-500">
-              Endpoint:{" "}
-              <code className="bg-gray-100 px-2 py-1 rounded">
-                POST
-                /api/ltr/&lt;org&gt;/&lt;project&gt;/train?force_retrain=false
-              </code>
-            </p>
-
+          
             {/* Pretty train result */}
             {trainResult && (
               <div className="mt-3 space-y-4">
@@ -413,7 +400,7 @@ export default function DeveloperRecommendationPage() {
               </div>
             </div>
 
-            {/* Inputs based on mode */}
+        
             {mode === "id" ? (
               <div className="grid gap-3 md:grid-cols-3">
                 <div className="md:col-span-2">
@@ -519,100 +506,175 @@ export default function DeveloperRecommendationPage() {
               </div>
             )}
 
-            {/* Recommendation cards */}
+            {/* Recommendation cards / table + tabs */}
             {recommendations.length > 0 && (
-              <div className="mt-4 space-y-3">
-                <h3 className="text-sm font-semibold text-[#01559A]">
-                  Top {recommendations.length} recommended developers
-                </h3>
-                <div className="grid gap-3 md:grid-cols-2">
-                  {recommendations.map((dev, idx) => {
-                    const recentLabel = getRecencyLabel(dev.recent_days);
-                    const score = typeof dev.score === "number" ? dev.score : 0;
-                    const scorePct = Math.round((score / maxScore) * 100);
+              <div className="mt-4 space-y-4">
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="text-sm font-semibold text-[#01559A]">
+                    Top {recommendations.length} recommended developers
+                  </h3>
 
-                    return (
-                      <div
-                        key={dev.developer_id || idx}
-                        className="relative rounded-xl border border-gray-200 bg-white p-4 shadow-sm hover:shadow-md transition-shadow"
-                      >
-                        {/* Rank badge */}
-                        <div className="absolute -top-3 left-4">
-                          <span
-                            className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-                              idx === 0
-                                ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
-                                : "bg-slate-100 text-slate-600 border border-slate-200"
-                            }`}
-                          >
-                            #{idx + 1}{" "}
-                            {idx === 0 && (
-                              <span className="ml-1 hidden sm:inline">
-                                · Best match
-                              </span>
-                            )}
-                          </span>
-                        </div>
+                  {/* Tabs: Cards / Table */}
+                  <div className="inline-flex rounded-full border border-gray-200 bg-white p-1 text-xs md:text-sm">
+                    <button
+                      type="button"
+                      onClick={() => setViewMode("cards")}
+                      className={`px-3 py-1 rounded-full font-medium ${
+                        viewMode === "cards"
+                          ? "bg-[#01559A] text-white shadow-sm"
+                          : "text-[#01559A] hover:bg-gray-50"
+                      }`}
+                    >
+                      Cards
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setViewMode("table")}
+                      className={`px-3 py-1 rounded-full font-medium ml-1 ${
+                        viewMode === "table"
+                          ? "bg-[#01559A] text-white shadow-sm"
+                          : "text-[#01559A] hover:bg-gray-50"
+                      }`}
+                    >
+                      Table
+                    </button>
+                  </div>
+                </div>
 
-                        <div className="mt-1 space-y-2">
-                          <div>
-                            <div className="text-xs font-semibold text-gray-500">
-                              Developer
-                            </div>
-                            <div className="text-sm font-semibold text-gray-900 break-all">
-                              {dev.developer_id || "-"}
-                            </div>
+                {/* View: CARDS */}
+                {viewMode === "cards" && (
+                  <div className="grid gap-3 md:grid-cols-2">
+                    {recommendations.map((dev, idx) => {
+                      const score =
+                        typeof dev.score === "number" ? dev.score : 0;
+                      const scorePct = Math.max(
+                        0,
+                        Math.min(100, Math.round((score / maxScore) * 100))
+                      );
+
+                      return (
+                        <div
+                          key={dev.developer_id || idx}
+                          className="relative rounded-xl border border-gray-200 bg-white p-4 shadow-sm hover:shadow-md transition-shadow"
+                        >
+                          {/* Rank badge */}
+                          <div className="absolute -top-3 left-4">
+                            <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-100">
+                              #{idx + 1}
+                            </span>
                           </div>
 
-                          <div className="grid grid-cols-3 gap-2 text-xs">
-                            <div className="bg-slate-50 rounded-lg p-2">
-                              <div className="text-[10px] text-slate-500">
-                                Bugs fixed (total)
+                          <div className="mt-1 space-y-3">
+                            {/* Developer ID */}
+                            <div>
+                              <div className="text-xs font-semibold text-gray-500">
+                                Developer ID
                               </div>
-                              <div className="text-sm font-semibold text-slate-900">
-                                {dev.bugs_fixed_total ?? "-"}
+                              <div className="text-sm font-semibold text-gray-900 break-all">
+                                {dev.developer_id || "-"}
                               </div>
                             </div>
-                            <div className="bg-slate-50 rounded-lg p-2">
-                              <div className="text-[10px] text-slate-500">
-                                Bugs fixed (topic)
+
+                            {/* Stats */}
+                            <div className="space-y-1 text-xs text-gray-700">
+                              <div>
+                                <span className="font-semibold">
+                                  Bugs fixed (total):
+                                </span>{" "}
+                                {dev.bugs_fixed_total ?? "-"}
                               </div>
-                              <div className="text-sm font-semibold text-slate-900">
+                              <div>
+                                <span className="font-semibold">
+                                  Bugs fixed (topic):
+                                </span>{" "}
                                 {dev.bugs_fixed_topic ?? "-"}
                               </div>
                             </div>
-                            <div className="bg-slate-50 rounded-lg p-2">
-                              <div className="text-[10px] text-slate-500">
-                                Recency
-                              </div>
-                              <div className="text-[11px] text-slate-900">
-                                {recentLabel}
-                              </div>
-                            </div>
-                          </div>
 
-                          {/* Score bar */}
-                          <div className="space-y-1">
-                            <div className="flex items-center justify-between text-[11px] text-gray-600">
-                              <span>LTR score</span>
-                              <span className="font-mono">
-                                {score.toFixed(4)}
-                              </span>
-                            </div>
-                            <div className="h-2 w-full rounded-full bg-gray-100 overflow-hidden">
-                              <div
-                                className={`h-full rounded-full ${
-                                  idx === 0 ? "bg-emerald-500" : "bg-[#01559A]"
-                                }`}
-                                style={{ width: `${scorePct}%` }}
-                              />
+                            {/* LTR score */}
+                            <div className="space-y-1">
+                              <div className="flex items-center justify-between text-[11px] text-gray-600">
+                                <span>LTR score</span>
+                                <span className="font-mono">
+                                  {score.toFixed(4)}
+                                </span>
+                              </div>
+                              <div className="h-1.5 w-full rounded-full bg-gray-100 overflow-hidden">
+                                <div
+                                  className="h-full rounded-full bg-[#01559A]"
+                                  style={{ width: `${scorePct}%` }}
+                                />
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* View: TABLE */}
+                {viewMode === "table" && (
+                  <div className="mt-2">
+                    <h4 className="text-sm font-semibold text-[#01559A] mb-2">
+                      Developer table (from API payload)
+                    </h4>
+                    <div className="overflow-x-auto border border-gray-200 rounded-lg">
+                      <table className="min-w-full text-xs md:text-sm">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-3 py-2 text-left font-semibold text-gray-700 border-b">
+                              Rank
+                            </th>
+                            <th className="px-3 py-2 text-left font-semibold text-gray-700 border-b">
+                              Developer ID
+                            </th>
+                            <th className="px-3 py-2 text-right font-semibold text-gray-700 border-b">
+                              Bugs fixed (total)
+                            </th>
+                            <th className="px-3 py-2 text-right font-semibold text-gray-700 border-b">
+                              Bugs fixed (topic)
+                            </th>
+                            <th className="px-3 py-2 text-right font-semibold text-gray-700 border-b">
+                              LTR score
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {recommendations.map((dev, idx) => {
+                            const score =
+                              typeof dev.score === "number"
+                                ? dev.score
+                                : Number(dev.score) || 0;
+
+                            return (
+                              <tr
+                                key={`row-${dev.developer_id || idx}`}
+                                className="odd:bg-white even:bg-gray-50"
+                              >
+                                <td className="px-3 py-2 border-b text-gray-800">
+                                  #{idx + 1}
+                                </td>
+                                <td className="px-3 py-2 border-b text-gray-900 break-all">
+                                  {dev.developer_id || "-"}
+                                </td>
+                                <td className="px-3 py-2 border-b text-right text-gray-800">
+                                  {dev.bugs_fixed_total ?? "-"}
+                                </td>
+                                <td className="px-3 py-2 border-b text-right text-gray-800">
+                                  {dev.bugs_fixed_topic ?? "-"}
+                                </td>
+                                <td className="px-3 py-2 border-b text-right font-mono text-gray-900">
+                                  {score.toFixed(4)}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
