@@ -235,7 +235,6 @@ export default function DeveloperRecommendationPage() {
               </button>
             </div>
 
-          
             {/* Pretty train result */}
             {trainResult && (
               <div className="mt-3 space-y-4">
@@ -400,7 +399,6 @@ export default function DeveloperRecommendationPage() {
               </div>
             </div>
 
-        
             {mode === "id" ? (
               <div className="grid gap-3 md:grid-cols-3">
                 <div className="md:col-span-2">
@@ -617,8 +615,18 @@ export default function DeveloperRecommendationPage() {
                 {viewMode === "table" && (
                   <div className="mt-2">
                     <h4 className="text-sm font-semibold text-[#01559A] mb-2">
-                      Developer table (from API payload)
+                      Developer table
                     </h4>
+                    <p className="mb-3 text-xs text-gray-600">
+                      This feature recommends the developers who are most likely
+                      to be a good fit to fix your issue, based on how often
+                      they have handled similar bugs in the past. You can
+                      trigger the recommendation either by entering an existing
+                      Bug ID or by providing a short text description of the
+                      bug. Behind the scenes, the system analyzes historical
+                      bug-fixing data to identify developers with the most
+                      relevant experience for that specific problem.
+                    </p>
                     <div className="overflow-x-auto border border-gray-200 rounded-lg">
                       <table className="min-w-full text-xs md:text-sm">
                         <thead className="bg-gray-50">
