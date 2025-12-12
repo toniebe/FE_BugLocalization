@@ -6,7 +6,6 @@ import Link from "next/link";
 import PriceCard from "@/components/PriceCard";
 import Chatbot from "@/components/Chatbot";
 
-
 export default function Home() {
   const [open, setOpen] = useState(false);
   const [showChatbot, setShowChatbot] = useState(false); // ⬅️ TAMBAH INI
@@ -145,14 +144,14 @@ export default function Home() {
                 Get Started
               </Link>
 
-              {/* Tombol buat munculin Chatbot */}
+              {/* Tombol buat munculin Chatbot
               <button
                 type="button"
                 onClick={() => setShowChatbot((v) => !v)}
                 className="inline-flex items-center justify-center rounded-lg px-6 py-3 text-base sm:text-lg font-medium text-[#01559A] border border-[#01559A] hover:bg-[#01559A]/5 transition"
               >
                 {"Open AI Assistant"}
-              </button>
+              </button> */}
             </div>
           </div>
         </section>
@@ -276,12 +275,7 @@ export default function Home() {
         </div>
       </footer>
 
-      {/* CHATBOT: tampil kalau showChatbot = true */}
-      {showChatbot && (
-        
-          <Chatbot />
-
-      )}
+      <Chatbot />
     </div>
   );
 }
