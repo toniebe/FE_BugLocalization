@@ -364,7 +364,7 @@ export default function DeveloperRecommendationPage() {
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
               <div>
                 <h2 className="text-lg font-semibold text-[#01559A]">
-                  2. Get Recommended Developers
+                  2. Developer Recommendation
                 </h2>
                 <p className="text-sm text-gray-600">
                   This feature recommends the developers who are most likely to
