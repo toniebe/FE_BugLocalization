@@ -366,15 +366,10 @@ export default function DeveloperRecommendationPage() {
                 <h2 className="text-lg font-semibold text-[#01559A]">
                   2. Get Recommended Developers
                 </h2>
-                <p className="mb-3 text-xs text-gray-600">
+                <p className="text-sm text-gray-600">
                   This feature recommends the developers who are most likely to
                   be a good fit to fix your issue, based on how often they have
-                  handled similar bugs in the past. You can trigger the
-                  recommendation either by entering an existing Bug ID or by
-                  providing a short text description of the bug. Behind the
-                  scenes, the system analyzes historical bug-fixing data to
-                  identify developers with the most relevant experience for that
-                  specific problem.
+                  handled similar bugs in the past
                 </p>
               </div>
 
