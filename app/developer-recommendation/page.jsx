@@ -366,9 +366,15 @@ export default function DeveloperRecommendationPage() {
                 <h2 className="text-lg font-semibold text-[#01559A]">
                   2. Get Recommended Developers
                 </h2>
-                <p className="text-sm text-gray-600">
-                  Search by Bug ID or paste a short summary. The model will rank
-                  developers by their relevance and experience.
+                <p className="mb-3 text-xs text-gray-600">
+                  This feature recommends the developers who are most likely to
+                  be a good fit to fix your issue, based on how often they have
+                  handled similar bugs in the past. You can trigger the
+                  recommendation either by entering an existing Bug ID or by
+                  providing a short text description of the bug. Behind the
+                  scenes, the system analyzes historical bug-fixing data to
+                  identify developers with the most relevant experience for that
+                  specific problem.
                 </p>
               </div>
 
@@ -617,16 +623,6 @@ export default function DeveloperRecommendationPage() {
                     <h4 className="text-sm font-semibold text-[#01559A] mb-2">
                       Developer table
                     </h4>
-                    <p className="mb-3 text-xs text-gray-600">
-                      This feature recommends the developers who are most likely
-                      to be a good fit to fix your issue, based on how often
-                      they have handled similar bugs in the past. You can
-                      trigger the recommendation either by entering an existing
-                      Bug ID or by providing a short text description of the
-                      bug. Behind the scenes, the system analyzes historical
-                      bug-fixing data to identify developers with the most
-                      relevant experience for that specific problem.
-                    </p>
                     <div className="overflow-x-auto border border-gray-200 rounded-lg">
                       <table className="min-w-full text-xs md:text-sm">
                         <thead className="bg-gray-50">
